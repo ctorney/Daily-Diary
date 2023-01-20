@@ -1,0 +1,25 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+    <EditTextPreference
+        android:defaultValue=""
+        android:key="ics_url"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        app:useSimpleSummaryProvider="true"
+        android:title="Location of calendar ics file" />
+
+
+    <EditTextPreference
+        android:defaultValue="1"
+        android:key="num_pages"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:inputType="numberDecimal"
+        android:digits="0123456789"
+        app:useSimpleSummaryProvider="true"
+        android:title="Number of pages per day" />
+
+
+</PreferenceScreen>

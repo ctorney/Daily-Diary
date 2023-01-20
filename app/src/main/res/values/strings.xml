@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Daily Diary</string>
+    <string name="action_settings">Settings</string>
+    <string name="Sunday">S</string>
+    <string name="Monday">M</string>
+    <string name="Tuesday">T</string>
+    <string name="Wednesday">W</string>
+    <string name="Thursday">T</string>
+    <string name="Friday">F</string>
+    <string name="Saturday">S</string>
+
+</resources>

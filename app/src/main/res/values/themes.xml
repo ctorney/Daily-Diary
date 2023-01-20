@@ -1,0 +1,19 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+
+
+    <style name="Theme.DailyDiary" parent="Theme.MaterialComponents.Light.DarkActionBar">
+
+        <!-- Customize your theme here. -->
+    </style>
+
+    <style name="Theme.DailyDiary.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Theme.DailyDiary.AppBarOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="Theme.DailyDiary.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+</resources>
