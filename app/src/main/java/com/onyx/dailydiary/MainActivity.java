@@ -19,6 +19,7 @@ import android.graphics.Typeface;
 import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -26,7 +27,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-//import android.widget.Toolbar;
+// import android.widget.Toolbar;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -59,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
     private String DayofMonth;
 
+    private static final String TAG = MainActivity.class.getSimpleName();
 
 //    private AppBarConfiguration appBarConfiguration;
 //    private ActivityMainBinding binding;
@@ -136,6 +138,24 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         return true;
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        TasksFragment fragment = TasksFragment.GetInstance();
+        fragment.onDestroyView();
+        Log.d(TAG, "- ON PAUSE -");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        TasksFragment fragment = TasksFragment.GetInstance();
+//        fragment.safeLoadBitmap();
+
+        Log.d(TAG, "- ON RESUME -");
+    }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {

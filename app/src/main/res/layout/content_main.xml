@@ -144,6 +144,7 @@
         </LinearLayout>
 
 
+
         <LinearLayout
             xmlns:tools="http://schemas.android.com/tools"
             android:layout_width="match_parent"
@@ -157,26 +158,49 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:orientation="horizontal">
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/Monday"
-                    android:textColor="@color/gray"
-                    android:textAlignment="center"
-                    android:textSize="16sp"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:layout_weight="1">
 
-                <TextView
-                    android:layout_width="0dp"
+
+                    <!-- res/layout/example_activity.xml -->
+                    <androidx.fragment.app.FragmentContainerView
+                        xmlns:android="http://schemas.android.com/apk/res/android"
+                        android:id="@+id/fragment_container_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:name="com.onyx.dailydiary.TasksFragment" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/Tuesday"
-                    android:textColor="@color/gray"
-                    android:textAlignment="center"
-                    android:textSize="16sp"/>
+                    android:orientation="horizontal"
+                    android:layout_weight="1">
+
+
+                    <androidx.fragment.app.FragmentContainerView
+                        xmlns:android="http://schemas.android.com/apk/res/android"
+                        android:id="@+id/fragment_container_view_summary"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:name="com.onyx.dailydiary.SummaryFragment" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
@@ -184,6 +208,47 @@
 
 
         </LinearLayout>
+
+<!--        <LinearLayout-->
+<!--            xmlns:tools="http://schemas.android.com/tools"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:orientation="vertical"-->
+<!--            android:background="@color/white"-->
+<!--            android:layout_weight="1.5"-->
+<!--            android:theme="@style/Theme.DailyDiary.AppBarOverlay"-->
+<!--            tools:context=".MainActivity">-->
+
+
+<!--            <LinearLayout-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:orientation="horizontal">-->
+
+<!--                <TextView-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_weight="1"-->
+<!--                    android:text="@string/Monday"-->
+<!--                    android:textColor="@color/gray"-->
+<!--                    android:textAlignment="center"-->
+<!--                    android:textSize="16sp"/>-->
+
+<!--                <TextView-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_weight="1"-->
+<!--                    android:text="@string/Tuesday"-->
+<!--                    android:textColor="@color/gray"-->
+<!--                    android:textAlignment="center"-->
+<!--                    android:textSize="16sp"/>-->
+
+<!--            </LinearLayout>-->
+
+
+
+
+<!--        </LinearLayout>-->
 
     </LinearLayout>
 
