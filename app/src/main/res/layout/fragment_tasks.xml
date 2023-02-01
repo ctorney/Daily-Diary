@@ -9,7 +9,7 @@
 
 
     <RelativeLayout
-        android:id="@+id/activity_scribble_demo"
+        android:id="@+id/fragment_container_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingLeft="0dp"
@@ -20,7 +20,7 @@
         <LinearLayout
             android:id="@+id/layout_function"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="50dp"
             android:orientation="horizontal">
 
 
@@ -28,11 +28,11 @@
                 android:id="@+id/task_text"
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:layout_gravity="left"
+                android:layout_height="30dp"
+                android:layout_gravity="center_vertical|left"
                 android:paddingLeft="10dp"
-                android:textColor="@color/black"
-                android:textSize="30sp"
+                android:textColor="@color/white"
+                android:textSize="22sp"
                 android:text="Tasks" />
 
 
@@ -49,8 +49,9 @@
             <Button
                 android:id="@+id/button"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="0.05"
+                android:textSize="16sp"
                 android:stateListAnimator="@null"
                 android:text="Clear all" />
 

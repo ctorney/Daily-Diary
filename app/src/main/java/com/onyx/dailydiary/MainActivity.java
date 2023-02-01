@@ -79,49 +79,37 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
         setMonthView();
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
 
 
+    }
 
-                try {
+    public void openPage(){
+        try {
 
-                    String filename =  DayofMonth + "-" + monthYearFromDate(selectedDate) + ".pdf";
+            String filename =  DayofMonth + "-" + monthYearFromDate(selectedDate) + ".pdf";
 
-                    File myExternalFile = new File(getExternalFilesDir(filepath), filename);
+            File myExternalFile = new File(getExternalFilesDir(filepath), filename);
 
-                    if (!myExternalFile.exists())
-                        generatePDF(myExternalFile);
+            if (!myExternalFile.exists())
+                generatePDF(myExternalFile);
 
-                    Uri path = FileProvider.getUriForFile(MainActivity.this, BuildConfig.APPLICATION_ID.toString() + ".provider", myExternalFile);
+            Uri path = FileProvider.getUriForFile(MainActivity.this, BuildConfig.APPLICATION_ID.toString() + ".provider", myExternalFile);
 
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setDataAndType(path,"application/pdf");
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    startActivity(intent);
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(path,"application/pdf");
+            intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(intent);
 
 
 
-                }
-                catch (Exception e)
-                {
+        }
+        catch (Exception e)
+        {
 
-                    Toast.makeText(MainActivity.this, "Unable to open daily notes file.", Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this, "Unable to open daily notes file.", Toast.LENGTH_LONG).show();
 
-                }
-
-//                SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
-//                String  numPages = sharedPref.getString("num_pages", "2");
-//
-//
-//                pdfhandler.openPDF(MainActivity.this, DayofMonth + "-" + monthYearFromDate(selectedDate), numPages);
-
-            }
-        });
+        }
 
     }
 
@@ -301,7 +289,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
         Canvas canvas;
         canvas = startPage.getCanvas();
-        canvas.drawText(DayofMonth + " " + monthFromDate(selectedDate)+ " " + yearFromDate(selectedDate), 110, 95, title);
+        canvas.drawText(DayofMonth + " " + monthFromDate(selectedDate)+ " " + yearFromDate(selectedDate), 110, 135, title);
         Paint paint;
         paint = new Paint();
 

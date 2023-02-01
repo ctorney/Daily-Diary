@@ -55,7 +55,6 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
     private static TasksFragment instance;
     private static final String TAG = TasksFragment.class.getSimpleName();
 
-    private SurfaceHolder mHolder;
 
     private String filepath = "Bitmaps";
     private String filename =  "tasks.png";
@@ -212,7 +211,7 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
 
     private void initSurfaceView() {
         binding.surfaceview.setBackgroundColor(Color.WHITE);
-        touchHelper = TouchHelper.create(binding.surfaceview, callback);
+        touchHelper = TouchHelper.create(binding.surfaceview, tasks_callback);
 
 
 //        surfaceView = (SurfaceView) findViewById(R.id.surfaceView);
@@ -259,7 +258,11 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
         binding.surfaceview.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-//                Log.d(TAG, "surfaceView.setOnTouchListener - onTouch::action - " + event.getAction());
+                Log.d(TAG, "surfaceView.setOnTouchListener - onTouch::action - " + event.getAction());
+                touchHelper.setRawDrawingEnabled(true);
+                Log.d(TAG, "touchHelper - " +  touchHelper.isRawDrawingCreated() +  touchHelper.isRawDrawingInputEnabled() +  touchHelper.isRawDrawingRenderEnabled() );
+
+
                 return true;
             }
         });
@@ -269,7 +272,6 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 Log.d(TAG, "surfaceCreated");
-                mHolder = holder;
                 safeLoadBitmap();
                 touchHelper.setRawDrawingEnabled(true);
                 touchHelper.setRawDrawingRenderEnabled(true);
@@ -342,7 +344,7 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
 
     }
 
-    private RawInputCallback callback = new RawInputCallback() {
+    private RawInputCallback tasks_callback = new RawInputCallback() {
 
         @Override
         public void onBeginRawDrawing(boolean b, TouchPoint touchPoint) {

@@ -140,8 +140,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
 
-
         </LinearLayout>
+
+
 
 
 
@@ -165,7 +166,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
-                    android:layout_weight="1">
+                    android:layout_weight="1"
+                    android:background="@color/black">
 
 
                     <!-- res/layout/example_activity.xml -->
@@ -174,6 +176,7 @@
                         android:id="@+id/fragment_container_view"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
+                        android:layout_margin="2dp"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -186,7 +189,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_weight="1">
+                    android:layout_weight="1"
+                    android:background="@color/black" >
+
 
 
                     <androidx.fragment.app.FragmentContainerView
@@ -194,6 +199,7 @@
                         android:id="@+id/fragment_container_view_summary"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
+                        android:layout_margin="2dp"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
