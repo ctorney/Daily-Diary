@@ -27,4 +27,6 @@
 
     <style name="Theme.DailyDiary.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+
+
 </resources>

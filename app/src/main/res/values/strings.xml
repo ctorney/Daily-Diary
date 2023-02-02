@@ -8,5 +8,9 @@
     <string name="Thursday">T</string>
     <string name="Friday">F</string>
     <string name="Saturday">S</string>
+    <string name="title_activity_fullscreen">FullscreenActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="title_activity_writer">WriterActivity</string>
 
 </resources>

@@ -92,26 +92,38 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
 
     }
+    @Override
+    protected void onDestroy() {
+        touchHelper.closeRawDrawing();
+        super.onDestroy();
+    }
 
+    public String getSummaryFilename(){
+        String filename =  DayofMonth + "-" + monthYearFromDate(selectedDate) + ".png";
+        return filename;
+    }
     public void openPage(){
         try {
 
-            String filename =  DayofMonth + "-" + monthYearFromDate(selectedDate) + ".pdf";
+//            String filename =  DayofMonth + "-" + monthYearFromDate(selectedDate) + ".pdf";
+//
+//            File myExternalFile = new File(getExternalFilesDir(filepath), filename);
+//
+//            if (!myExternalFile.exists())
+//                generatePDF(myExternalFile);
+//
+//            Uri path = FileProvider.getUriForFile(MainActivity.this, BuildConfig.APPLICATION_ID.toString() + ".provider", myExternalFile);
+//
+//            Intent intent = new Intent(Intent.ACTION_VIEW);
+//            intent.setDataAndType(path,"application/pdf");
+//            intent.putExtra("pageno", 2);
+//
+////            intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+//            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//            startActivity(intent);
 
-            File myExternalFile = new File(getExternalFilesDir(filepath), filename);
-
-            if (!myExternalFile.exists())
-                generatePDF(myExternalFile);
-
-            Uri path = FileProvider.getUriForFile(MainActivity.this, BuildConfig.APPLICATION_ID.toString() + ".provider", myExternalFile);
-
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setDataAndType(path,"application/pdf");
-            intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            startActivity(intent);
-
-
+            Intent i = new Intent(MainActivity.this, WriterActivity.class);
+            startActivity(i);
 
         }
         catch (Exception e)
@@ -146,16 +158,14 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
         SummaryFragment summaryFragment = SummaryFragment.GetInstance();
         summaryFragment.onDestroyView();
+
+        touchHelper.closeRawDrawing();
         Log.d(TAG, "- ON PAUSE -");
     }
 
     @Override
     public void onResume() {
         super.onResume();
-
-//        TasksFragment fragment = TasksFragment.GetInstance();
-//        fragment.safeLoadBitmap();
-
         Log.d(TAG, "- ON RESUME -");
     }
     @Override
@@ -256,10 +266,17 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     {
         if(!dayText.equals(""))
         {
+            SummaryFragment fragment = SummaryFragment.GetInstance();
+            fragment.saveBitmap();
+            fragment.saveBitmap();
             DayofMonth = dayText;
             String message = "Selected Date " + DayofMonth + " " + monthYearFromDate(selectedDate);
 //            String message = "Selected Date "  + dayMonthYearFromDate(selectedDate);
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+
+            fragment.loadBitmap();
+            fragment.redrawSurface();
+
         }
     }
 
@@ -369,7 +386,6 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         touchHelper.setMultiRegionMode();
         touchHelper.setRawDrawingEnabled(true);
         touchHelper.setRawDrawingRenderEnabled(true);
-
         Log.d(TAG, "setup touchHelper ");
 
 
@@ -382,7 +398,6 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                 @Override
                 public void onBeginRawDrawing(boolean b, TouchPoint touchPoint) {
                     Log.d(TAG, "onBeginRawDrawing");
-                    touchHelper.setRawDrawingRenderEnabled(true);
                     if (writeTasks==true) {
                         TasksFragment fragment = TasksFragment.GetInstance();
                         fragment.points.clear();
@@ -398,7 +413,6 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                 @Override
                 public void onEndRawDrawing(boolean b, TouchPoint touchPoint) {
                     Log.d(TAG, "onEndRawDrawing");
-
                     touchHelper.setRawDrawingRenderEnabled(true);
                 }
 
@@ -445,9 +459,6 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
                 @Override
                 public void onEndRawErasing(boolean b, TouchPoint touchPoint) {
-
-//                    touchHelper.setRawDrawingEnabled(false);
-//                    touchHelper.setRawDrawingRenderEnabled(false);
                     if (writeTasks==true) {
                         TasksFragment fragment = TasksFragment.GetInstance();
                         fragment.redrawSurface();
@@ -456,8 +467,6 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                         SummaryFragment fragment = SummaryFragment.GetInstance();
                         fragment.redrawSurface();
                     }
-//                    touchHelper.setRawDrawingEnabled(true);
-//                    touchHelper.setRawDrawingRenderEnabled(true);
                 }
 
                 @Override
@@ -510,13 +519,5 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         return rawInputCallback;
     }
 
-    public void redrawSurface() {
-        TasksFragment fragment = TasksFragment.GetInstance();
 
-        Log.d(TAG, "redrawSurface");
-        Canvas lockCanvas =fragment.binding.surfaceview.getHolder().lockCanvas();
-        lockCanvas.drawColor(Color.WHITE);
-        lockCanvas.drawBitmap(fragment.bitmap, 0, 0, null);
-        fragment.binding.surfaceview.getHolder().unlockCanvasAndPost(lockCanvas);
-    }
 }
