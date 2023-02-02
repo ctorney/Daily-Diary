@@ -59,7 +59,7 @@ public class SummaryFragment extends Fragment implements View.OnClickListener {
 
     private String filepath = "Bitmaps";
     private String filename =  "summary.png";
-    private TouchHelper touchHelper1;
+//    private TouchHelper touchHelper1;
     private View surfaceBackground;
     //    private Path path;
     private final float STROKE_WIDTH = 4.0f;
@@ -69,7 +69,7 @@ public class SummaryFragment extends Fragment implements View.OnClickListener {
     //    private int[] colors = new int[]{Color.WHITE, Color.GREEN, Color.MAGENTA, Color.BLUE};
     private int currentSurfaceBackgroundColor = Color.WHITE;
 
-    private List<TouchPoint> points = new ArrayList<>();
+    public List<TouchPoint> points = new ArrayList<>();
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -224,7 +224,7 @@ public class SummaryFragment extends Fragment implements View.OnClickListener {
 
     private void initSurfaceView() {
         binding.summarysurfaceview.setBackgroundColor(Color.WHITE);
-        touchHelper1 = TouchHelper.create(binding.summarysurfaceview, callback);
+//        touchHelper = TouchHelper.create(binding.summarysurfaceview, callback);
 
 
 //        surfaceView = (SurfaceView) findViewById(R.id.surfaceView);
@@ -260,10 +260,10 @@ public class SummaryFragment extends Fragment implements View.OnClickListener {
 //                exclude.add(getRelativeRect(binding.surfaceview2, binding.clearTasks));
                 Rect limit = new Rect();
                 binding.summarysurfaceview.getLocalVisibleRect(limit);
-                touchHelper1.setStrokeWidth(STROKE_WIDTH)
-                        .setLimitRect(limit, null)
-                        .openRawDrawing();
-                touchHelper1.setStrokeStyle(TouchHelper.STROKE_STYLE_MARKER);
+//                touchHelper1.setStrokeWidth(STROKE_WIDTH)
+//                        .setLimitRect(limit, null)
+//                        .openRawDrawing();
+//                touchHelper1.setStrokeStyle(TouchHelper.STROKE_STYLE_MARKER);
                 binding.summarysurfaceview.addOnLayoutChangeListener(this);
             }
         });
@@ -271,7 +271,9 @@ public class SummaryFragment extends Fragment implements View.OnClickListener {
         binding.summarysurfaceview.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-//                Log.d(TAG, "surfaceView.setOnTouchListener - onTouch::action - " + event.getAction());
+                Log.d(TAG, "summarysurfaceview.setOnTouchListener - onTouch::action - " + event.getAction());
+
+                ((MainActivity)getActivity()).writeTasks = false;
                 return true;
             }
         });
@@ -281,10 +283,16 @@ public class SummaryFragment extends Fragment implements View.OnClickListener {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 Log.d(TAG, "surfaceCreated");
-                mHolder = holder;
+
                 safeLoadBitmap();
-                touchHelper1.setRawDrawingEnabled(true);
-                touchHelper1.setRawDrawingRenderEnabled(true);
+
+                Rect limit = new Rect();
+                binding.summarysurfaceview.getGlobalVisibleRect(limit);
+
+                ((MainActivity)getActivity()).addRect(limit);
+
+//                touchHelper.setRawDrawingEnabled(true);
+//                touchHelper.setRawDrawingRenderEnabled(true);
             }
 
             @Override
@@ -369,7 +377,6 @@ public class SummaryFragment extends Fragment implements View.OnClickListener {
         public void onEndRawDrawing(boolean b, TouchPoint touchPoint) {
             Log.d(TAG, "onEndRawDrawing");
             enableFingerTouch(getApplicationContext());
-//            touchHelper.setRawDrawingRenderEnabled(false);
 
 
         }
@@ -442,7 +449,7 @@ public class SummaryFragment extends Fragment implements View.OnClickListener {
     };
 
 
-    private void drawScribbleToBitmap(List<TouchPoint> list, boolean eraser) {
+    public void drawScribbleToBitmap(List<TouchPoint> list, boolean eraser) {
 
         Canvas canvas = new Canvas(bitmap);
 
@@ -467,11 +474,15 @@ public class SummaryFragment extends Fragment implements View.OnClickListener {
     }
 
     public void redrawSurface() {
+        ((MainActivity)getActivity()).touchHelper.setRawDrawingRenderEnabled(false);
+
         Log.d(TAG, "redrawSurface");
         Canvas lockCanvas = binding.summarysurfaceview.getHolder().lockCanvas();
         lockCanvas.drawColor(Color.WHITE);
         lockCanvas.drawBitmap(bitmap, 0, 0, null);
         binding.summarysurfaceview.getHolder().unlockCanvasAndPost(lockCanvas);
+        ((MainActivity)getActivity()).touchHelper.setRawDrawingRenderEnabled(true);
+
     }
     public static void disableFingerTouch(Context context) {
         int width = context.getResources().getDisplayMetrics().widthPixels;

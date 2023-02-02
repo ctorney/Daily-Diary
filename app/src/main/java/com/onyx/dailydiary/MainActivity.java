@@ -14,7 +14,9 @@ import android.app.FragmentManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
@@ -42,6 +44,10 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.onyx.android.sdk.data.note.TouchPoint;
+import com.onyx.android.sdk.pen.RawInputCallback;
+import com.onyx.android.sdk.pen.TouchHelper;
+import com.onyx.android.sdk.pen.data.TouchPointList;
 //import androidx.navigation.NavController;
 //import androidx.navigation.Navigation;
 //import androidx.navigation.ui.AppBarConfiguration;
@@ -57,9 +63,13 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     private TextView monthText;
     private RecyclerView calendarRecyclerView;
     private LocalDate selectedDate;
+    public TouchHelper touchHelper;
+    private final float STROKE_WIDTH = 4.0f;
 
+    public boolean writeTasks;
+    private RawInputCallback rawInputCallback;
     private String DayofMonth;
-
+    private List<Rect> limitRectList = new ArrayList<>();
     private static final String TAG = MainActivity.class.getSimpleName();
 
 //    private AppBarConfiguration appBarConfiguration;
@@ -74,11 +84,11 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         initWidgets();
         selectedDate = LocalDate.now();
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d");
         DayofMonth = selectedDate.format(formatter);
 
         setMonthView();
-
+        touchHelper = TouchHelper.create(getWindow().getDecorView().getRootView(), getRawInputCallback());
 
 
     }
@@ -130,8 +140,12 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     public void onPause() {
         super.onPause();
 
-        TasksFragment fragment = TasksFragment.GetInstance();
-        fragment.onDestroyView();
+        TasksFragment tasksFragment = TasksFragment.GetInstance();
+        tasksFragment.onDestroyView();
+
+
+        SummaryFragment summaryFragment = SummaryFragment.GetInstance();
+        summaryFragment.onDestroyView();
         Log.d(TAG, "- ON PAUSE -");
     }
 
@@ -139,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     public void onResume() {
         super.onResume();
 
-        TasksFragment fragment = TasksFragment.GetInstance();
+//        TasksFragment fragment = TasksFragment.GetInstance();
 //        fragment.safeLoadBitmap();
 
         Log.d(TAG, "- ON RESUME -");
@@ -341,4 +355,168 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         pdfDocument.close();
     }
 
+    public void addRect(Rect limit)
+    {
+        Log.d(TAG, "addRect ");
+        limitRectList.add(limit);
+        if (limitRectList.size() < 2) {
+            return;
+        }
+        touchHelper.setStrokeWidth(STROKE_WIDTH).setLimitRect(limitRectList, new ArrayList<Rect>()).setStrokeStyle(TouchHelper.STROKE_STYLE_MARKER)
+                .openRawDrawing();
+
+        touchHelper.setStrokeColor(Color.BLACK);
+        touchHelper.setMultiRegionMode();
+        touchHelper.setRawDrawingEnabled(true);
+        touchHelper.setRawDrawingRenderEnabled(true);
+
+        Log.d(TAG, "setup touchHelper ");
+
+
+
+
+    }
+    public RawInputCallback getRawInputCallback() {
+        if (rawInputCallback == null) {
+            rawInputCallback = new RawInputCallback() {
+                @Override
+                public void onBeginRawDrawing(boolean b, TouchPoint touchPoint) {
+                    Log.d(TAG, "onBeginRawDrawing");
+                    touchHelper.setRawDrawingRenderEnabled(true);
+                    if (writeTasks==true) {
+                        TasksFragment fragment = TasksFragment.GetInstance();
+                        fragment.points.clear();
+                    }
+                    else {
+                        SummaryFragment fragment = SummaryFragment.GetInstance();
+                        fragment.points.clear();
+                    }
+
+
+                }
+
+                @Override
+                public void onEndRawDrawing(boolean b, TouchPoint touchPoint) {
+                    Log.d(TAG, "onEndRawDrawing");
+
+                    touchHelper.setRawDrawingRenderEnabled(true);
+                }
+
+                @Override
+                public void onRawDrawingTouchPointMoveReceived(TouchPoint touchPoint) {
+
+                }
+
+                @Override
+                public void onRawDrawingTouchPointListReceived(TouchPointList touchPointList) {
+                    Log.d(TAG, "onRawDrawingTouchPointListReceived");
+
+                    if (writeTasks==true) {
+                        TasksFragment fragment = TasksFragment.GetInstance();
+                        fragment.drawScribbleToBitmap(touchPointList.getPoints(),false);
+                    }
+                    else {
+                        SummaryFragment fragment = SummaryFragment.GetInstance();
+                        fragment.drawScribbleToBitmap(touchPointList.getPoints(),false);
+                    }
+
+
+                }
+
+                @Override
+                public void onBeginRawErasing(boolean b, TouchPoint touchPoint) {
+
+//                    touchHelper.setRawDrawingEnabled(false);
+                    touchHelper.setRawDrawingRenderEnabled(true);
+
+                    if (writeTasks==true) {
+                        TasksFragment fragment = TasksFragment.GetInstance();
+                        fragment.points.clear();
+                        fragment.redrawSurface();
+
+                    }
+                    else {
+                        SummaryFragment fragment = SummaryFragment.GetInstance();
+                        fragment.points.clear();
+                        fragment.redrawSurface();
+                    }
+
+                }
+
+                @Override
+                public void onEndRawErasing(boolean b, TouchPoint touchPoint) {
+
+//                    touchHelper.setRawDrawingEnabled(false);
+//                    touchHelper.setRawDrawingRenderEnabled(false);
+                    if (writeTasks==true) {
+                        TasksFragment fragment = TasksFragment.GetInstance();
+                        fragment.redrawSurface();
+                    }
+                    else {
+                        SummaryFragment fragment = SummaryFragment.GetInstance();
+                        fragment.redrawSurface();
+                    }
+//                    touchHelper.setRawDrawingEnabled(true);
+//                    touchHelper.setRawDrawingRenderEnabled(true);
+                }
+
+                @Override
+                public void onRawErasingTouchPointMoveReceived(TouchPoint touchPoint) {
+                    if (writeTasks==true) {
+                        TasksFragment fragment = TasksFragment.GetInstance();
+                        fragment.points.add(touchPoint);
+                        if (fragment.points.size() >= 100) {
+                            List<TouchPoint> pointList = new ArrayList<>(fragment.points);
+                            fragment.points.clear();
+                            TouchPointList touchPointList = new TouchPointList();
+                            for (TouchPoint point : pointList) {
+                                touchPointList.add(point);
+                            }
+                            fragment.drawScribbleToBitmap(pointList, true);
+
+                        }
+                    }
+                    else {
+                        SummaryFragment fragment = SummaryFragment.GetInstance();
+                        fragment.points.clear();
+                        if (fragment.points.size() >= 100) {
+                            List<TouchPoint> pointList = new ArrayList<>(fragment.points);
+                            fragment.points.clear();
+                            TouchPointList touchPointList = new TouchPointList();
+                            for (TouchPoint point : pointList) {
+                                touchPointList.add(point);
+                            }
+                            fragment.drawScribbleToBitmap(pointList, true);
+
+                        }
+                    }
+                }
+
+                @Override
+                public void onRawErasingTouchPointListReceived(TouchPointList touchPointList) {
+                    Log.d(TAG, "onRawErasingTouchPointListReceived");
+                    if (writeTasks==true) {
+                        TasksFragment fragment = TasksFragment.GetInstance();
+                        fragment.drawScribbleToBitmap(touchPointList.getPoints(),true);
+                    }
+                    else {
+                        SummaryFragment fragment = SummaryFragment.GetInstance();
+                        fragment.drawScribbleToBitmap(touchPointList.getPoints(),true);
+                    }
+
+                }
+            };
+        }
+        return rawInputCallback;
+    }
+
+    public void redrawSurface() {
+        TasksFragment fragment = TasksFragment.GetInstance();
+
+        Log.d(TAG, "redrawSurface");
+        Canvas lockCanvas =fragment.binding.surfaceview.getHolder().lockCanvas();
+        lockCanvas.drawColor(Color.WHITE);
+        lockCanvas.drawBitmap(fragment.bitmap, 0, 0, null);
+        fragment.binding.surfaceview.getHolder().unlockCanvasAndPost(lockCanvas);
+    }
 }

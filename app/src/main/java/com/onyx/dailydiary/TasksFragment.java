@@ -12,6 +12,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
@@ -51,24 +52,24 @@ import com.onyx.android.sdk.data.note.TouchPoint;
 import com.onyx.android.sdk.pen.data.TouchPointList;
 
 public class TasksFragment extends Fragment implements View.OnClickListener {
-    private FragmentTasksBinding binding;
+    public FragmentTasksBinding binding;
     private static TasksFragment instance;
     private static final String TAG = TasksFragment.class.getSimpleName();
 
 
     private String filepath = "Bitmaps";
     private String filename =  "tasks.png";
-    private TouchHelper touchHelper;
+//    private TouchHelper touchHelper;
     private View surfaceBackground;
 //    private Path path;
     private final float STROKE_WIDTH = 4.0f;
-    private Bitmap bitmap;
+    public Bitmap bitmap;
     private Paint mPaint = new Paint();
     private Paint erasePaint = new Paint();
 //    private int[] colors = new int[]{Color.WHITE, Color.GREEN, Color.MAGENTA, Color.BLUE};
     private int currentSurfaceBackgroundColor = Color.WHITE;
 
-    private List<TouchPoint> points = new ArrayList<>();
+    public List<TouchPoint> points = new ArrayList<>();
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -211,7 +212,7 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
 
     private void initSurfaceView() {
         binding.surfaceview.setBackgroundColor(Color.WHITE);
-        touchHelper = TouchHelper.create(binding.surfaceview, tasks_callback);
+//        touchHelper = TouchHelper.create(binding.surfaceview, tasks_callback);
 
 
 //        surfaceView = (SurfaceView) findViewById(R.id.surfaceView);
@@ -247,9 +248,9 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
 //                exclude.add(getRelativeRect(binding.surfaceview2, binding.clearTasks));
                 Rect limit = new Rect();
                 binding.surfaceview.getLocalVisibleRect(limit);
-                touchHelper.setStrokeWidth(STROKE_WIDTH)
-                        .setLimitRect(limit, null)
-                        .openRawDrawing();
+//                touchHelper.setStrokeWidth(STROKE_WIDTH)
+//                        .setLimitRect(limit, null)
+//                        .openRawDrawing();
 //                touchHelper.setStrokeStyle(TouchHelper.STROKE_STYLE_MARKER);
                 binding.surfaceview.addOnLayoutChangeListener(this);
             }
@@ -259,9 +260,10 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 Log.d(TAG, "surfaceView.setOnTouchListener - onTouch::action - " + event.getAction());
-                touchHelper.setRawDrawingEnabled(true);
-                Log.d(TAG, "touchHelper - " +  touchHelper.isRawDrawingCreated() +  touchHelper.isRawDrawingInputEnabled() +  touchHelper.isRawDrawingRenderEnabled() );
+//                touchHelper.setRawDrawingEnabled(true);
+//                Log.d(TAG, "touchHelper - " +  touchHelper.isRawDrawingCreated() +  touchHelper.isRawDrawingInputEnabled() +  touchHelper.isRawDrawingRenderEnabled() );
 
+                ((MainActivity)getActivity()).writeTasks = true;
 
                 return true;
             }
@@ -273,8 +275,17 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
             public void surfaceCreated(SurfaceHolder holder) {
                 Log.d(TAG, "surfaceCreated");
                 safeLoadBitmap();
-                touchHelper.setRawDrawingEnabled(true);
-                touchHelper.setRawDrawingRenderEnabled(true);
+//                touchHelper.setRawDrawingEnabled(true);
+//                touchHelper.setRawDrawingRenderEnabled(true);
+
+                Rect limit = new Rect();
+                binding.surfaceview.getGlobalVisibleRect(limit);
+
+                ((MainActivity)getActivity()).addRect(limit);
+
+
+
+
             }
 
             @Override
@@ -350,7 +361,7 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
         public void onBeginRawDrawing(boolean b, TouchPoint touchPoint) {
             Log.d(TAG, "onBeginRawDrawing");
             disableFingerTouch(getApplicationContext());
-            touchHelper.setRawDrawingRenderEnabled(true);
+//            touchHelper.setRawDrawingRenderEnabled(true);
             points.clear();
 
         }
@@ -359,7 +370,7 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
         public void onEndRawDrawing(boolean b, TouchPoint touchPoint) {
             Log.d(TAG, "onEndRawDrawing");
             enableFingerTouch(getApplicationContext());
-            touchHelper.setRawDrawingRenderEnabled(false);
+//            touchHelper.setRawDrawingRenderEnabled(false);
 
 
         }
@@ -392,7 +403,7 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
         public void onBeginRawErasing(boolean b, TouchPoint touchPoint) {
             Log.d(TAG, "onBeginRawErasing");
 //            EpdController.enablePost(binding.surfaceview, 1);
-            touchHelper.setRawDrawingRenderEnabled(false);
+//            touchHelper.setRawDrawingRenderEnabled(false);
             points.clear();
             redrawSurface();
 
@@ -402,7 +413,7 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
         public void onEndRawErasing(boolean b, TouchPoint touchPoint) {
             Log.d(TAG, "onEndRawErasing");
             redrawSurface();
-            touchHelper.setRawDrawingRenderEnabled(true);
+//            touchHelper.setRawDrawingRenderEnabled(true);
 
         }
 
@@ -432,17 +443,24 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
     };
 
 
-    private void drawScribbleToBitmap(List<TouchPoint> list, boolean eraser) {
-
+    public void drawScribbleToBitmap(List<TouchPoint> list, boolean eraser) {
+        Log.d(TAG, "drawScribbleToBitmap");
         Canvas canvas = new Canvas(bitmap);
+
+        Rect limit = new Rect();
+        Point offset = new Point();
+        binding.surfaceview.getGlobalVisibleRect(limit,offset);
+//        Log.d(TAG, "drawScribbleToBitmap " + limit + " " + offset);
 
         Path path = new Path();
         PointF prePoint = new PointF(list.get(0).x, list.get(0).y);
-        path.moveTo(prePoint.x, prePoint.y);
+        path.moveTo(prePoint.x-offset.x, prePoint.y-offset.y);
         for (TouchPoint point : list) {
-            path.quadTo(prePoint.x, prePoint.y, point.x, point.y);
+            path.quadTo(prePoint.x-offset.x, prePoint.y-offset.y, point.x-offset.x, point.y-offset.y);
             prePoint.x = point.x;
             prePoint.y = point.y;
+
+//            Log.d(TAG, "drawScribbleToBitmap: " + prePoint.x + " " + prePoint.y);
         }
         if (eraser){
             canvas.drawPath(path, erasePaint);
@@ -450,6 +468,9 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
         else{
             canvas.drawPath(path, mPaint);
         }
+//        canvas.drawColor(Color.BLACK);
+//        saveBitmap();
+//        redrawSurface();
         Drawable drawable = ResourcesCompat.getDrawable(getResources(), R.drawable.lines, null);
         drawable.setBounds(0, 0,binding.surfaceview.getWidth(), binding.surfaceview.getHeight());
         drawable.draw(canvas);
@@ -457,11 +478,15 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
     }
 
     public void redrawSurface() {
+        ((MainActivity)getActivity()).touchHelper.setRawDrawingRenderEnabled(false);
+
+
         Log.d(TAG, "redrawSurface");
         Canvas lockCanvas = binding.surfaceview.getHolder().lockCanvas();
         lockCanvas.drawColor(Color.WHITE);
         lockCanvas.drawBitmap(bitmap, 0, 0, null);
         binding.surfaceview.getHolder().unlockCanvasAndPost(lockCanvas);
+        ((MainActivity)getActivity()).touchHelper.setRawDrawingRenderEnabled(true);
     }
     public static void disableFingerTouch(Context context) {
         int width = context.getResources().getDisplayMetrics().widthPixels;
