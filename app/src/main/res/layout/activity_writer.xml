@@ -14,56 +14,77 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
+        android:background="@color/black"
         android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/back_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/black"
+            android:layout_gravity="center_vertical|left"
+            app:srcCompat="@drawable/back" />
 
         <TextView
             android:id="@+id/date_text"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="30dp"
-            android:layout_gravity="center_vertical|left"
+            android:background="@color/black"
+            android:layout_gravity="center_vertical|center"
             android:paddingLeft="10dp"
-            android:textColor="@color/black"
+            android:textAlignment="center"
+            android:textColor="@color/white"
             android:textSize="22sp"
             android:text="Today" />
 
 
-
         <ImageButton
-            android:id="@+id/back"
+            android:id="@+id/save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@color/black"
             android:layout_gravity="center_vertical|end"
-            app:srcCompat="@android:drawable/ic_delete" />
+            app:srcCompat="@drawable/savepages" />
 
-        <ImageButton
-            android:id="@+id/prevpage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical|end"
-            app:srcCompat="@android:drawable/ic_delete" />
 
-        <ImageButton
-            android:id="@+id/nextpage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical|end"
-            app:srcCompat="@android:drawable/ic_delete" />
-
-        <ImageButton
-            android:id="@+id/addpage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical|end"
-            app:srcCompat="@android:drawable/ic_delete" />
 
 
         <ImageButton
             android:id="@+id/deletepage"
+            android:background="@color/black"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical|end"
-            app:srcCompat="@android:drawable/ic_delete" />
+            app:srcCompat="@drawable/deletepage" />
+
+        <ImageButton
+            android:id="@+id/addpage"
+            android:background="@color/black"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|end"
+            app:srcCompat="@drawable/addpage" />
+
+
+
+        <ImageButton
+            android:id="@+id/prevpage"
+            android:layout_width="wrap_content"
+            android:background="@color/black"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|end"
+            app:srcCompat="@drawable/prevpage" />
+
+        <ImageButton
+            android:id="@+id/nextpage"
+            android:layout_width="wrap_content"
+            android:background="@color/black"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|end"
+            app:srcCompat="@drawable/nextpage" />
+
+
 
     </LinearLayout>
 

@@ -139,7 +139,7 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
 
     public void onDestroyView(){
         Log.d(TAG, "onDestroyView");
-        redrawSurface();
+//        redrawSurface();
         super.onDestroyView();
         saveBitmap();
 
@@ -248,6 +248,9 @@ public class TasksFragment extends Fragment implements View.OnClickListener {
     }
 
     public void redrawSurface() {
+        if (!binding.surfaceview.getHolder().getSurface().isValid()){
+            return;
+        }
         ((MainActivity)getActivity()).touchHelper.setRawDrawingRenderEnabled(false);
 
 

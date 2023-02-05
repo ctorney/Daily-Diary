@@ -1,5 +1,7 @@
 package com.onyx.dailydiary;
 
+import static java.lang.System.currentTimeMillis;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import androidx.core.content.ContextCompat;
@@ -64,8 +66,12 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     private RecyclerView calendarRecyclerView;
     private LocalDate selectedDate;
     public TouchHelper touchHelper;
-    private final float STROKE_WIDTH = 4.0f;
+    private boolean redrawRunning = false;
 
+    private final float STROKE_WIDTH = 4.0f;
+    private boolean needsSave = false;
+    private long lastDraw = 0;
+    private long refreshInterval = 500;
     public boolean writeTasks;
     private RawInputCallback rawInputCallback;
     private String DayofMonth;
@@ -89,17 +95,19 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
         setMonthView();
         touchHelper = TouchHelper.create(getWindow().getDecorView().getRootView(), getRawInputCallback());
-
+        touchHelper.debugLog(true);
 
     }
     @Override
     protected void onDestroy() {
         touchHelper.closeRawDrawing();
         super.onDestroy();
+        Log.d(TAG, "onDestroy");
+
     }
 
-    public String getSummaryFilename(){
-        String filename =  DayofMonth + "-" + monthYearFromDate(selectedDate) + ".png";
+    public String getCurrentDateString(){
+        String filename =  DayofMonth + "-" + monthYearFromDate(selectedDate);
         return filename;
     }
     public void openPage(){
@@ -122,8 +130,11 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 //            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 //            startActivity(intent);
 
-            Intent i = new Intent(MainActivity.this, WriterActivity.class);
-            startActivity(i);
+            Intent intent = new Intent(MainActivity.this, WriterActivity.class);
+
+            intent.putExtra("date-string", getCurrentDateString()); //Optional parameters
+            intent.putExtra("stroke-width", STROKE_WIDTH);
+            startActivity(intent);
 
         }
         catch (Exception e)
@@ -135,6 +146,10 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
     }
 
+    public void debugTouchHelper(){
+        Log.d(TAG, "vals" + touchHelper.isRawDrawingCreated() + touchHelper.isRawDrawingRenderEnabled()+touchHelper.isRawDrawingInputEnabled());
+
+    }
     private void initWidgets()
     {
         calendarRecyclerView = findViewById(R.id.calendarRecyclerView);
@@ -153,20 +168,40 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         super.onPause();
 
         TasksFragment tasksFragment = TasksFragment.GetInstance();
-        tasksFragment.onDestroyView();
+        tasksFragment.saveBitmap();
 
 
         SummaryFragment summaryFragment = SummaryFragment.GetInstance();
-        summaryFragment.onDestroyView();
-
+        summaryFragment.saveBitmap();
+//        limitRectList.clear();
+//        touchHelper.closeRawDrawing();
         touchHelper.closeRawDrawing();
         Log.d(TAG, "- ON PAUSE -");
+    }
+
+    public TouchHelper getTouchHelper() {
+        return touchHelper;
     }
 
     @Override
     public void onResume() {
         super.onResume();
+//        touchHelper = TouchHelper.create(getWindow().getDecorView().getRootView(), callback);
+        touchHelper.setStrokeWidth(STROKE_WIDTH).setLimitRect(limitRectList, new ArrayList<Rect>()).setStrokeStyle(TouchHelper.STROKE_STYLE_MARKER);
+//
+//
+        touchHelper.setStrokeColor(Color.BLACK);
+        touchHelper.setMultiRegionMode();
+        touchHelper.setRawDrawingEnabled(false);
+        touchHelper.setRawDrawingEnabled(true);
+        touchHelper.setRawDrawingRenderEnabled(false);
+        touchHelper.setRawDrawingRenderEnabled(true);
+
+        touchHelper.openRawDrawing();
+
+
         Log.d(TAG, "- ON RESUME -");
+
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -268,10 +303,8 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         {
             SummaryFragment fragment = SummaryFragment.GetInstance();
             fragment.saveBitmap();
-            fragment.saveBitmap();
             DayofMonth = dayText;
             String message = "Selected Date " + DayofMonth + " " + monthYearFromDate(selectedDate);
-//            String message = "Selected Date "  + dayMonthYearFromDate(selectedDate);
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
 
             fragment.loadBitmap();
@@ -398,26 +431,49 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                 @Override
                 public void onBeginRawDrawing(boolean b, TouchPoint touchPoint) {
                     Log.d(TAG, "onBeginRawDrawing");
-                    if (writeTasks==true) {
+                    if (writeTasks == true) {
                         TasksFragment fragment = TasksFragment.GetInstance();
                         fragment.points.clear();
-                    }
-                    else {
+                    } else {
                         SummaryFragment fragment = SummaryFragment.GetInstance();
                         fragment.points.clear();
                     }
-
-
                 }
 
                 @Override
                 public void onEndRawDrawing(boolean b, TouchPoint touchPoint) {
                     Log.d(TAG, "onEndRawDrawing");
-                    touchHelper.setRawDrawingRenderEnabled(true);
+//                    touchHelper.setRawDrawingRenderEnabled(true);
+                    lastDraw = currentTimeMillis();
+                    if (!redrawRunning) {
+                        redrawRunning = true;
+                        Runnable thread = new Runnable() {
+                            public void run() {
+                                long currentTime = currentTimeMillis();
+                                while (currentTime < lastDraw + refreshInterval) {
+                                    currentTime = currentTimeMillis();
+                                }
+                                Log.d(TAG, "thread: redrawing");
+                                if (writeTasks == true) {
+                                    TasksFragment fragment = TasksFragment.GetInstance();
+                                    fragment.redrawSurface();
+                                } else {
+                                    SummaryFragment fragment = SummaryFragment.GetInstance();
+                                    fragment.redrawSurface();
+                                }
+                                redrawRunning = false;
+
+                            }
+                        };
+                        new Thread(thread).start();    //use start() instead of run()
+                    }
+
                 }
 
                 @Override
                 public void onRawDrawingTouchPointMoveReceived(TouchPoint touchPoint) {
+                    lastDraw = currentTimeMillis();
+
 
                 }
 
@@ -425,13 +481,12 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                 public void onRawDrawingTouchPointListReceived(TouchPointList touchPointList) {
                     Log.d(TAG, "onRawDrawingTouchPointListReceived");
 
-                    if (writeTasks==true) {
+                    if (writeTasks == true) {
                         TasksFragment fragment = TasksFragment.GetInstance();
-                        fragment.drawScribbleToBitmap(touchPointList.getPoints(),false);
-                    }
-                    else {
+                        fragment.drawScribbleToBitmap(touchPointList.getPoints(), false);
+                    } else {
                         SummaryFragment fragment = SummaryFragment.GetInstance();
-                        fragment.drawScribbleToBitmap(touchPointList.getPoints(),false);
+                        fragment.drawScribbleToBitmap(touchPointList.getPoints(), false);
                     }
 
 
@@ -441,15 +496,14 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                 public void onBeginRawErasing(boolean b, TouchPoint touchPoint) {
 
 //                    touchHelper.setRawDrawingEnabled(false);
-                    touchHelper.setRawDrawingRenderEnabled(true);
+//                    touchHelper.setRawDrawingRenderEnabled(true);
 
-                    if (writeTasks==true) {
+                    if (writeTasks == true) {
                         TasksFragment fragment = TasksFragment.GetInstance();
                         fragment.points.clear();
                         fragment.redrawSurface();
 
-                    }
-                    else {
+                    } else {
                         SummaryFragment fragment = SummaryFragment.GetInstance();
                         fragment.points.clear();
                         fragment.redrawSurface();
@@ -459,11 +513,10 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
                 @Override
                 public void onEndRawErasing(boolean b, TouchPoint touchPoint) {
-                    if (writeTasks==true) {
+                    if (writeTasks == true) {
                         TasksFragment fragment = TasksFragment.GetInstance();
                         fragment.redrawSurface();
-                    }
-                    else {
+                    } else {
                         SummaryFragment fragment = SummaryFragment.GetInstance();
                         fragment.redrawSurface();
                     }
@@ -471,7 +524,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
                 @Override
                 public void onRawErasingTouchPointMoveReceived(TouchPoint touchPoint) {
-                    if (writeTasks==true) {
+                    if (writeTasks == true) {
                         TasksFragment fragment = TasksFragment.GetInstance();
                         fragment.points.add(touchPoint);
                         if (fragment.points.size() >= 100) {
@@ -484,8 +537,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                             fragment.drawScribbleToBitmap(pointList, true);
 
                         }
-                    }
-                    else {
+                    } else {
                         SummaryFragment fragment = SummaryFragment.GetInstance();
                         fragment.points.clear();
                         if (fragment.points.size() >= 100) {
@@ -504,13 +556,12 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                 @Override
                 public void onRawErasingTouchPointListReceived(TouchPointList touchPointList) {
                     Log.d(TAG, "onRawErasingTouchPointListReceived");
-                    if (writeTasks==true) {
+                    if (writeTasks == true) {
                         TasksFragment fragment = TasksFragment.GetInstance();
-                        fragment.drawScribbleToBitmap(touchPointList.getPoints(),true);
-                    }
-                    else {
+                        fragment.drawScribbleToBitmap(touchPointList.getPoints(), true);
+                    } else {
                         SummaryFragment fragment = SummaryFragment.GetInstance();
-                        fragment.drawScribbleToBitmap(touchPointList.getPoints(),true);
+                        fragment.drawScribbleToBitmap(touchPointList.getPoints(), true);
                     }
 
                 }
@@ -518,6 +569,6 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         }
         return rawInputCallback;
     }
-
-
 }
+
+

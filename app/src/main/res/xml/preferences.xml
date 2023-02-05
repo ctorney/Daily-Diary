@@ -12,14 +12,14 @@
 
 
     <EditTextPreference
-        android:defaultValue="1"
-        android:key="num_pages"
+        android:defaultValue="4"
+        android:key="pen_width"
         android:selectAllOnFocus="true"
         android:singleLine="true"
         android:inputType="numberDecimal"
         android:digits="0123456789"
         app:useSimpleSummaryProvider="true"
-        android:title="Number of pages per day" />
+        android:title="Pen width" />
 
 
 </PreferenceScreen>

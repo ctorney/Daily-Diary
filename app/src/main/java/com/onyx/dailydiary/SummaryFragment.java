@@ -79,6 +79,9 @@ public class SummaryFragment extends Fragment implements View.OnClickListener {
             {
                 safeLoadBitmap();
                 redrawSurface();
+//                Rect limit = new Rect();
+//                binding.summarysurfaceview.getGlobalVisibleRect(limit);
+//                ((MainActivity)getActivity()).addRect(limit);
 
             }
         };
@@ -145,7 +148,7 @@ public class SummaryFragment extends Fragment implements View.OnClickListener {
 
     public void onDestroyView(){
         Log.d(TAG, "onDestroyView");
-        redrawSurface();
+//        redrawSurface();
         super.onDestroyView();
         saveBitmap();
     }
@@ -172,7 +175,7 @@ public class SummaryFragment extends Fragment implements View.OnClickListener {
 
     @SuppressLint("ClickableViewAccessibility")
     private void initSurfaceView() {
-        binding.summarysurfaceview.setBackgroundColor(Color.WHITE);
+        binding.summarysurfaceview.setBackgroundColor(Color.TRANSPARENT);
         binding.summarysurfaceview.setZOrderOnTop(true);
         binding.summarysurfaceview.getHolder().setFormat(PixelFormat.TRANSPARENT);
         binding.summarysurfaceview.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
@@ -196,7 +199,7 @@ public class SummaryFragment extends Fragment implements View.OnClickListener {
             @SuppressLint("ClickableViewAccessibility")
             public boolean onTouch(View v, MotionEvent event) {
                 Log.d(TAG, "summarysurfaceview.setOnTouchListener - onTouch::action - " + event.getAction());
-
+                ((MainActivity)getActivity()).debugTouchHelper();
                 ((MainActivity)getActivity()).writeTasks = false;
                 return true;
             }
@@ -259,6 +262,9 @@ public class SummaryFragment extends Fragment implements View.OnClickListener {
     }
 
     public void redrawSurface() {
+        if (!binding.summarysurfaceview.getHolder().getSurface().isValid()){
+            return;
+        }
         ((MainActivity)getActivity()).touchHelper.setRawDrawingRenderEnabled(false);
 
         Log.d(TAG, "redrawSurface");
@@ -273,7 +279,7 @@ public class SummaryFragment extends Fragment implements View.OnClickListener {
     public void saveBitmap() {
 
         Log.d(TAG, "saveBitmap");
-        String filename =  ((MainActivity)getActivity()).getSummaryFilename();
+        String filename =  ((MainActivity)getActivity()).getCurrentDateString() + ".png";
         File myExternalFile = new File(getActivity().getExternalFilesDir(filepath), filename);
         try {
             FileOutputStream fos =  new FileOutputStream(myExternalFile);
@@ -288,7 +294,7 @@ public class SummaryFragment extends Fragment implements View.OnClickListener {
         try {
             Log.d(TAG, "loadBitmap");
 
-            String filename =  ((MainActivity)getActivity()).getSummaryFilename();
+            String filename =  ((MainActivity)getActivity()).getCurrentDateString() + ".png";
             File myExternalFile = new File(getActivity().getExternalFilesDir(filepath), filename);
             if (myExternalFile.exists())
             {
