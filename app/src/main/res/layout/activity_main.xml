@@ -89,7 +89,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/Monday"
-                        android:textColor="@color/gray"
+                        android:textColor="@color/black"
                         android:textAlignment="center"
                         android:textSize="16sp"/>
 
@@ -98,7 +98,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/Tuesday"
-                        android:textColor="@color/gray"
+                        android:textColor="@color/black"
                         android:textAlignment="center"
                         android:textSize="16sp"/>
 
@@ -107,7 +107,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/Wednesday"
-                        android:textColor="@color/gray"
+                        android:textColor="@color/black"
                         android:textAlignment="center"
                         android:textSize="16sp"/>
 
@@ -116,7 +116,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/Thursday"
-                        android:textColor="@color/gray"
+                        android:textColor="@color/black"
                         android:textAlignment="center"
                         android:textSize="16sp"/>
 
@@ -125,7 +125,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/Friday"
-                        android:textColor="@color/gray"
+                        android:textColor="@color/black"
                         android:textAlignment="center"
                         android:textSize="16sp"/>
 
@@ -134,7 +134,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/Saturday"
-                        android:textColor="@color/gray"
+                        android:textColor="@color/black"
                         android:textAlignment="center"
                         android:textSize="16sp"/>
 
@@ -143,7 +143,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/Sunday"
-                        android:textColor="@color/gray"
+                        android:textColor="@color/black"
                         android:textAlignment="center"
                         android:textSize="16sp"/>
 
