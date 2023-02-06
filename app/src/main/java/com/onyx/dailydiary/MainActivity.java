@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
@@ -13,13 +14,21 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.FragmentManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PixelFormat;
+import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.Bundle;
@@ -27,6 +36,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -34,6 +45,7 @@ import android.widget.Toast;
 // import android.widget.Toolbar;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -46,10 +58,14 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.onyx.android.sdk.api.device.epd.EpdController;
 import com.onyx.android.sdk.data.note.TouchPoint;
 import com.onyx.android.sdk.pen.RawInputCallback;
 import com.onyx.android.sdk.pen.TouchHelper;
 import com.onyx.android.sdk.pen.data.TouchPointList;
+import com.onyx.android.sdk.rx.RxManager;
+import com.onyx.dailydiary.databinding.ActivityMainBinding;
+import com.onyx.dailydiary.databinding.ActivityWriterBinding;
 //import androidx.navigation.NavController;
 //import androidx.navigation.Navigation;
 //import androidx.navigation.ui.AppBarConfiguration;
@@ -60,14 +76,21 @@ import com.onyx.android.sdk.pen.data.TouchPointList;
 //import android.view.Menu;
 //import android.view.MenuItem;
 
-public class MainActivity extends AppCompatActivity implements CalendarAdapter.OnItemListener
+public class MainActivity extends AppCompatActivity implements CalendarAdapter.OnItemListener, View.OnClickListener
 {
+    private ActivityMainBinding binding;
     private TextView monthText;
     private RecyclerView calendarRecyclerView;
     private LocalDate selectedDate;
     public TouchHelper touchHelper;
-    private boolean redrawRunning = false;
+    private final String tasksfilename = "tasks.png";
+    private Bitmap tasksBitmap;
+    private Bitmap summaryBitmap;
+    public List<TouchPoint> points = new ArrayList<>();
 
+    private boolean redrawRunning = false;
+    Paint penPaint;
+    Paint eraserPaint;
     private final float STROKE_WIDTH = 4.0f;
     private boolean needsSave = false;
     private long lastDraw = 0;
@@ -78,6 +101,9 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     private List<Rect> limitRectList = new ArrayList<>();
     private static final String TAG = MainActivity.class.getSimpleName();
 
+//    SurfaceWriter surfaceWriter;
+    private GlobalDeviceReceiver deviceReceiver = new GlobalDeviceReceiver();
+    private RxManager rxManager;
 //    private AppBarConfiguration appBarConfiguration;
 //    private ActivityMainBinding binding;
 //    private String filename = "SampleFile.pdf";
@@ -86,8 +112,14 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        deviceReceiver.enable(this, true);
+        View view = binding.getRoot();
+        setContentView(view);
+//        setContentView(R.layout.activity_main);
         initWidgets();
+        initReceiver();
+        initPaint();
         selectedDate = LocalDate.now();
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d");
@@ -95,21 +127,204 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
         setMonthView();
         touchHelper = TouchHelper.create(getWindow().getDecorView().getRootView(), getRawInputCallback());
-        touchHelper.debugLog(true);
+//        touchHelper.debugLog(true);
+//        startService(new Intent(this, UpdaterServiceManager.class));
+//        surfaceWriter = new SurfaceWriter(getWindow().getDecorView().getRootView(), this);
+        initSurfaceView(binding.taskssurfaceview);
+        initSurfaceView(binding.summarysurfaceview);
+
+        Button clear_all = (Button) view.findViewById(R.id.clearsummary);
+        clear_all.setOnClickListener(this);
+        Button open_diary = (Button) view.findViewById(R.id.opendiary);
+        open_diary.setOnClickListener(this);
+
+        Button clear_tasks = (Button) view.findViewById(R.id.clear_tasks);
+        clear_tasks.setOnClickListener(this);
 
     }
+
     @Override
     protected void onDestroy() {
-        touchHelper.closeRawDrawing();
+//        touchHelper.closeRawDrawing();
         super.onDestroy();
         Log.d(TAG, "onDestroy");
 
     }
 
+//    public SurfaceWriter getSurfaceWriter()
+//    {
+//        return surfaceWriter;
+//    }
+
+
+    public void pointsHandler(){
+        Log.d(TAG,  "pointsHandler");
+
+    }
+    @Override
+    public void onPause() {
+//        touchHelper.setRawDrawingEnabled(false);
+
+        super.onPause();
+
+//        surfaceWriter.stopWriter();
+        touchHelper.setRawDrawingEnabled(false);
+        touchHelper.setRawDrawingRenderEnabled(false);
+        touchHelper.closeRawDrawing();
+//        TasksFragment tasksFragment = TasksFragment.GetInstance();
+//        tasksFragment.saveBitmap();
+//
+//
+//        SummaryFragment summaryFragment = SummaryFragment.GetInstance();
+//        summaryFragment.saveBitmap();
+//        limitRectList.clear();
+//        touchHelper.closeRawDrawing();
+//        touchHelper.closeRawDrawing();
+        saveBitmap(tasksBitmap, tasksfilename);
+        String summaryFilename =  getCurrentDateString() + ".png";
+        saveBitmap(summaryBitmap, summaryFilename);
+        Log.d(TAG, "- ON PAUSE -");
+    }
+
+//    public TouchHelper getTouchHelper() {
+//        return touchHelper;
+//    }
+
+    @Override
+    public void onResume() {
+
+        Log.d(TAG, "- ON RESUME -");
+
+//        touchHelper.setRawDrawingEnabled(true);
+        super.onResume();
+
+        Runnable thread = new Runnable()
+        {
+            public void run()
+            {
+                tasksBitmap = safeLoadBitmap(tasksBitmap, tasksfilename, binding.taskssurfaceview, R.drawable.lines);
+                String summaryFilename =  getCurrentDateString() + ".png";
+                summaryBitmap = safeLoadBitmap(summaryBitmap, summaryFilename, binding.summarysurfaceview, R.drawable.finelines);
+//                surfaceWriter.startWriter(limitRectList);
+                touchHelper.setLimitRect(limitRectList, new ArrayList<Rect>())
+                        .openRawDrawing();
+                touchHelper.setRawDrawingEnabled(false);
+                touchHelper.setMultiRegionMode();
+                touchHelper.setRawDrawingEnabled(true);
+                touchHelper.enableFingerTouch(true);
+                touchHelper.setRawDrawingRenderEnabled(true);
+
+
+            }
+        };
+        new Thread(thread).start();
+
+        return;
+
+
+
+    }
+
+
+    @Override
+    public void onClick(View view) {
+        switch(view.getId()) {
+            case R.id.clear_tasks:
+                tasksBitmap = resetBitmap(tasksBitmap, binding.taskssurfaceview, R.drawable.lines);
+                redrawSurface(tasksBitmap, binding.taskssurfaceview);
+                break;
+            case R.id.clearsummary:
+                summaryBitmap = resetBitmap(summaryBitmap, binding.summarysurfaceview, R.drawable.finelines);
+                redrawSurface(summaryBitmap, binding.summarysurfaceview);
+                break;
+            case R.id.opendiary:
+                openPage();
+                break;
+        }
+        Log.d(TAG, "Summary onClick");
+    }
+
+    private void initReceiver() {
+        deviceReceiver.setSystemNotificationPanelChangeListener(new GlobalDeviceReceiver.SystemNotificationPanelChangeListener() {
+            @Override
+            public void onNotificationPanelChanged(boolean open) {
+//                touchHelper.setRawDrawingEnabled(!open);
+                Log.d(TAG, "onNotificationPanelChanged " + open);
+
+//                renderToScreen(binding.surfaceview, bitmap);
+            }
+        }).setSystemScreenOnListener(new GlobalDeviceReceiver.SystemScreenOnListener() {
+            @Override
+            public void onScreenOn() {
+                Log.d(TAG, "onScreenOn");
+
+//                renderToScreen(binding.surfaceview, bitmap);
+            }
+        });
+    }
+
+
     public String getCurrentDateString(){
         String filename =  DayofMonth + "-" + monthYearFromDate(selectedDate);
         return filename;
     }
+
+    private void initSurfaceView(final SurfaceView surfaceView) {
+
+
+        surfaceView.setBackgroundColor(Color.WHITE);
+        surfaceView.setZOrderOnTop(true);
+        surfaceView.getHolder().setFormat(PixelFormat.TRANSPARENT);
+        final SurfaceHolder.Callback surfaceCallback = new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) {
+//                cleanSurfaceView(surfaceView);
+                Rect limit = new Rect();
+                surfaceView.getGlobalVisibleRect(limit);
+                limitRectList.add(limit);
+                onSurfaceCreated(limitRectList);
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            }
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+                holder.removeCallback(this);
+            }
+        };
+        surfaceView.getHolder().addCallback(surfaceCallback);
+    }
+
+    private void onSurfaceCreated(List<Rect> limitRectList) {
+        if (limitRectList.size() < 2) {
+            return;
+        }
+        touchHelper.setLimitRect(limitRectList, new ArrayList<Rect>())
+                .openRawDrawing();
+        touchHelper.setRawDrawingEnabled(false);
+        touchHelper.setMultiRegionMode();
+        touchHelper.setRawDrawingEnabled(true);
+        touchHelper.enableFingerTouch(true);
+        touchHelper.setRawDrawingRenderEnabled(true);
+
+//        surfaceWriter.startWriter(limitRectList);
+
+    }
+
+    private void cleanSurfaceView(SurfaceView surfaceView) {
+        if (surfaceView.getHolder() == null) {
+            return;
+        }
+        Canvas canvas = surfaceView.getHolder().lockCanvas();
+        if (canvas == null) {
+            return;
+        }
+        canvas.drawColor(Color.WHITE);
+        surfaceView.getHolder().unlockCanvasAndPost(canvas);
+    }
+
     public void openPage(){
         try {
 
@@ -147,7 +362,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     }
 
     public void debugTouchHelper(){
-        Log.d(TAG, "vals" + touchHelper.isRawDrawingCreated() + touchHelper.isRawDrawingRenderEnabled()+touchHelper.isRawDrawingInputEnabled());
+//        Log.d(TAG, "vals" + touchHelper.isRawDrawingCreated() + touchHelper.isRawDrawingRenderEnabled()+touchHelper.isRawDrawingInputEnabled());
 
     }
     private void initWidgets()
@@ -156,6 +371,31 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         monthText = findViewById(R.id.monthTV);
 
     }
+
+    private void initPaint(){
+
+//        path = new Path();
+
+        penPaint = new Paint();
+        penPaint.setAntiAlias(true);
+        penPaint.setDither(true);
+        penPaint.setColor(Color.BLACK);
+        penPaint.setStyle(Paint.Style.STROKE);
+        penPaint.setStrokeJoin(Paint.Join.ROUND);
+        penPaint.setStrokeCap(Paint.Cap.ROUND);
+        penPaint.setStrokeWidth(STROKE_WIDTH);
+
+        eraserPaint = new Paint();
+        eraserPaint.setAntiAlias(true);
+        eraserPaint.setDither(true);
+        eraserPaint.setColor(Color.WHITE);
+        eraserPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        eraserPaint.setStrokeJoin(Paint.Join.ROUND);
+        eraserPaint.setStrokeCap(Paint.Cap.SQUARE);
+        eraserPaint.setStrokeWidth(10*STROKE_WIDTH);
+//
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -163,46 +403,6 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         return true;
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-
-        TasksFragment tasksFragment = TasksFragment.GetInstance();
-        tasksFragment.saveBitmap();
-
-
-        SummaryFragment summaryFragment = SummaryFragment.GetInstance();
-        summaryFragment.saveBitmap();
-//        limitRectList.clear();
-//        touchHelper.closeRawDrawing();
-        touchHelper.closeRawDrawing();
-        Log.d(TAG, "- ON PAUSE -");
-    }
-
-    public TouchHelper getTouchHelper() {
-        return touchHelper;
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-//        touchHelper = TouchHelper.create(getWindow().getDecorView().getRootView(), callback);
-        touchHelper.setStrokeWidth(STROKE_WIDTH).setLimitRect(limitRectList, new ArrayList<Rect>()).setStrokeStyle(TouchHelper.STROKE_STYLE_MARKER);
-//
-//
-        touchHelper.setStrokeColor(Color.BLACK);
-        touchHelper.setMultiRegionMode();
-        touchHelper.setRawDrawingEnabled(false);
-        touchHelper.setRawDrawingEnabled(true);
-        touchHelper.setRawDrawingRenderEnabled(false);
-        touchHelper.setRawDrawingRenderEnabled(true);
-
-        touchHelper.openRawDrawing();
-
-
-        Log.d(TAG, "- ON RESUME -");
-
-    }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -301,14 +501,17 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     {
         if(!dayText.equals(""))
         {
-            SummaryFragment fragment = SummaryFragment.GetInstance();
-            fragment.saveBitmap();
+//            SummaryFragment fragment = SummaryFragment.GetInstance();
+//            fragment.saveBitmap();
+            String summaryFilename =  getCurrentDateString() + ".png";
+            saveBitmap(summaryBitmap, summaryFilename);
             DayofMonth = dayText;
             String message = "Selected Date " + DayofMonth + " " + monthYearFromDate(selectedDate);
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            summaryFilename =  getCurrentDateString() + ".png";
 
-            fragment.loadBitmap();
-            fragment.redrawSurface();
+            summaryBitmap = loadBitmap(summaryBitmap,summaryFilename,binding.summarysurfaceview, R.drawable.finelines);
+            redrawSurface(summaryBitmap,binding.summarysurfaceview);
 
         }
     }
@@ -408,42 +611,40 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     public void addRect(Rect limit)
     {
         Log.d(TAG, "addRect ");
-        limitRectList.add(limit);
-        if (limitRectList.size() < 2) {
-            return;
-        }
-        touchHelper.setStrokeWidth(STROKE_WIDTH).setLimitRect(limitRectList, new ArrayList<Rect>()).setStrokeStyle(TouchHelper.STROKE_STYLE_MARKER)
-                .openRawDrawing();
-
-        touchHelper.setStrokeColor(Color.BLACK);
-        touchHelper.setMultiRegionMode();
-        touchHelper.setRawDrawingEnabled(true);
-        touchHelper.setRawDrawingRenderEnabled(true);
-        Log.d(TAG, "setup touchHelper ");
+//        limitRectList.add(limit);
+//        if (limitRectList.size() < 2) {
+//            return;
+//        }
+//        touchHelper.setStrokeWidth(STROKE_WIDTH).setLimitRect(limitRectList, new ArrayList<Rect>()).setStrokeStyle(TouchHelper.STROKE_STYLE_MARKER)
+//                .openRawDrawing();
+//
+//        touchHelper.setStrokeColor(Color.BLACK);
+//        touchHelper.setMultiRegionMode();
+//        touchHelper.setRawDrawingEnabled(true);
+//        touchHelper.setRawDrawingRenderEnabled(true);
+//        Log.d(TAG, "setup touchHelper ");
 
 
 
 
     }
+
     public RawInputCallback getRawInputCallback() {
         if (rawInputCallback == null) {
             rawInputCallback = new RawInputCallback() {
                 @Override
                 public void onBeginRawDrawing(boolean b, TouchPoint touchPoint) {
                     Log.d(TAG, "onBeginRawDrawing");
-                    if (writeTasks == true) {
-                        TasksFragment fragment = TasksFragment.GetInstance();
-                        fragment.points.clear();
-                    } else {
-                        SummaryFragment fragment = SummaryFragment.GetInstance();
-                        fragment.points.clear();
-                    }
+                    points.clear();
+    //                disableFingerTouch(getApplicationContext());
+
                 }
 
                 @Override
                 public void onEndRawDrawing(boolean b, TouchPoint touchPoint) {
-                    Log.d(TAG, "onEndRawDrawing");
-//                    touchHelper.setRawDrawingRenderEnabled(true);
+                    Log.d(TAG, "onEndRawDrawing###");
+                    touchHelper.setRawDrawingEnabled(false);
+                    touchHelper.setRawDrawingEnabled(true);
                     lastDraw = currentTimeMillis();
                     if (!redrawRunning) {
                         redrawRunning = true;
@@ -454,13 +655,10 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                                     currentTime = currentTimeMillis();
                                 }
                                 Log.d(TAG, "thread: redrawing");
-                                if (writeTasks == true) {
-                                    TasksFragment fragment = TasksFragment.GetInstance();
-                                    fragment.redrawSurface();
-                                } else {
-                                    SummaryFragment fragment = SummaryFragment.GetInstance();
-                                    fragment.redrawSurface();
-                                }
+
+                                redrawSurface(tasksBitmap, binding.taskssurfaceview);
+                                redrawSurface(summaryBitmap, binding.summarysurfaceview);
+
                                 redrawRunning = false;
 
                             }
@@ -468,106 +666,173 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                         new Thread(thread).start();    //use start() instead of run()
                     }
 
-                }
+                    }
 
                 @Override
                 public void onRawDrawingTouchPointMoveReceived(TouchPoint touchPoint) {
                     lastDraw = currentTimeMillis();
-
-
                 }
 
                 @Override
                 public void onRawDrawingTouchPointListReceived(TouchPointList touchPointList) {
-                    Log.d(TAG, "onRawDrawingTouchPointListReceived");
-
-                    if (writeTasks == true) {
-                        TasksFragment fragment = TasksFragment.GetInstance();
-                        fragment.drawScribbleToBitmap(touchPointList.getPoints(), false);
-                    } else {
-                        SummaryFragment fragment = SummaryFragment.GetInstance();
-                        fragment.drawScribbleToBitmap(touchPointList.getPoints(), false);
-                    }
-
-
+                    drawScribbleToBitmap(tasksBitmap,binding.taskssurfaceview, R.drawable.lines, touchPointList.getPoints(), false);
+                    drawScribbleToBitmap(summaryBitmap,binding.summarysurfaceview, R.drawable.finelines, touchPointList.getPoints(), false);
                 }
 
                 @Override
                 public void onBeginRawErasing(boolean b, TouchPoint touchPoint) {
-
-//                    touchHelper.setRawDrawingEnabled(false);
-//                    touchHelper.setRawDrawingRenderEnabled(true);
-
-                    if (writeTasks == true) {
-                        TasksFragment fragment = TasksFragment.GetInstance();
-                        fragment.points.clear();
-                        fragment.redrawSurface();
-
-                    } else {
-                        SummaryFragment fragment = SummaryFragment.GetInstance();
-                        fragment.points.clear();
-                        fragment.redrawSurface();
-                    }
-
+                    points.clear();
+                    redrawSurface(tasksBitmap, binding.taskssurfaceview);
+                    redrawSurface(summaryBitmap, binding.summarysurfaceview);
                 }
 
                 @Override
                 public void onEndRawErasing(boolean b, TouchPoint touchPoint) {
-                    if (writeTasks == true) {
-                        TasksFragment fragment = TasksFragment.GetInstance();
-                        fragment.redrawSurface();
-                    } else {
-                        SummaryFragment fragment = SummaryFragment.GetInstance();
-                        fragment.redrawSurface();
-                    }
+                    redrawSurface(tasksBitmap, binding.taskssurfaceview);
+                    redrawSurface(summaryBitmap, binding.summarysurfaceview);
                 }
 
                 @Override
                 public void onRawErasingTouchPointMoveReceived(TouchPoint touchPoint) {
-                    if (writeTasks == true) {
-                        TasksFragment fragment = TasksFragment.GetInstance();
-                        fragment.points.add(touchPoint);
-                        if (fragment.points.size() >= 100) {
-                            List<TouchPoint> pointList = new ArrayList<>(fragment.points);
-                            fragment.points.clear();
-                            TouchPointList touchPointList = new TouchPointList();
-                            for (TouchPoint point : pointList) {
-                                touchPointList.add(point);
-                            }
-                            fragment.drawScribbleToBitmap(pointList, true);
-
+                    points.add(touchPoint);
+                    if (points.size() >= 100) {
+                        List<TouchPoint> pointList = new ArrayList<>(points);
+                        points.clear();
+                        TouchPointList touchPointList = new TouchPointList();
+                        for (TouchPoint point : pointList) {
+                            touchPointList.add(point);
                         }
-                    } else {
-                        SummaryFragment fragment = SummaryFragment.GetInstance();
-                        fragment.points.clear();
-                        if (fragment.points.size() >= 100) {
-                            List<TouchPoint> pointList = new ArrayList<>(fragment.points);
-                            fragment.points.clear();
-                            TouchPointList touchPointList = new TouchPointList();
-                            for (TouchPoint point : pointList) {
-                                touchPointList.add(point);
-                            }
-                            fragment.drawScribbleToBitmap(pointList, true);
+                        drawScribbleToBitmap(tasksBitmap,binding.taskssurfaceview, R.drawable.lines, touchPointList.getPoints(), true);
+                        drawScribbleToBitmap(summaryBitmap,binding.summarysurfaceview, R.drawable.finelines, touchPointList.getPoints(), true);
 
-                        }
                     }
+
                 }
 
                 @Override
                 public void onRawErasingTouchPointListReceived(TouchPointList touchPointList) {
-                    Log.d(TAG, "onRawErasingTouchPointListReceived");
-                    if (writeTasks == true) {
-                        TasksFragment fragment = TasksFragment.GetInstance();
-                        fragment.drawScribbleToBitmap(touchPointList.getPoints(), true);
-                    } else {
-                        SummaryFragment fragment = SummaryFragment.GetInstance();
-                        fragment.drawScribbleToBitmap(touchPointList.getPoints(), true);
-                    }
+                        Log.d(TAG, "onRawErasingTouchPointListReceived");
+                    drawScribbleToBitmap(tasksBitmap,binding.taskssurfaceview, R.drawable.lines, touchPointList.getPoints(), true);
+                    drawScribbleToBitmap(summaryBitmap,binding.summarysurfaceview, R.drawable.finelines, touchPointList.getPoints(), true);
 
                 }
             };
         }
         return rawInputCallback;
+    }
+
+//    p
+
+    public Bitmap resetBitmap(Bitmap bitmap, SurfaceView surfaceView, int background) {
+        Log.d(TAG, "resetBitmap");
+        try {
+
+
+            bitmap = null;
+            Drawable drawable = ResourcesCompat.getDrawable(getResources(), background, null);
+            bitmap = Bitmap.createBitmap(surfaceView.getWidth(), surfaceView.getHeight(), Bitmap.Config.ARGB_8888);
+            drawable.setBounds(0, 0, surfaceView.getWidth(), surfaceView.getHeight());
+            Canvas canvas = new Canvas(bitmap);
+            drawable.draw(canvas);
+        }
+        catch (Exception e) {
+            Log.d("resetBitmap Error: ", e.getMessage(), e);
+        }
+        return bitmap;
+    }
+    public void redrawSurface(Bitmap bitmap, SurfaceView surfaceView) {
+        if (!surfaceView.getHolder().getSurface().isValid()){
+            return;
+        }
+//        touchHelper.setRawDrawingRenderEnabled(false);
+
+        Log.d(TAG, "redrawSurface");
+        Canvas lockCanvas = surfaceView.getHolder().lockCanvas();
+        lockCanvas.drawColor(Color.WHITE);
+        lockCanvas.drawBitmap(bitmap, 0, 0, null);
+        surfaceView.getHolder().unlockCanvasAndPost(lockCanvas);
+//        touchHelper.setRawDrawingRenderEnabled(true);
+
+    }
+
+    public Bitmap loadBitmap(Bitmap bitmap, String filename, SurfaceView surfaceView, int background) {
+        try {
+            Log.d(TAG, "loadBitmap");
+            File myExternalFile = new File(getExternalFilesDir(filepath), filename);
+            if (myExternalFile.exists())
+            {
+                BitmapFactory.Options opt = new BitmapFactory.Options();
+                opt.inScaled = true;
+                opt.inMutable = true;
+                bitmap = BitmapFactory.decodeStream(new FileInputStream(myExternalFile),null, opt);
+            }
+            else
+            {
+                bitmap = resetBitmap(bitmap, surfaceView, background);
+
+            }
+        } catch (Exception e) {
+            Log.d("loadBitmap Error: ", e.getMessage(), e);
+        }
+
+        return bitmap;
+    }
+
+    public Bitmap safeLoadBitmap(Bitmap bitmap, String filename, SurfaceView surfaceView, int background) {
+        while (!surfaceView.getHolder().getSurface().isValid()) {
+            // waits for the surface to be drawn
+        }
+        bitmap = loadBitmap(bitmap, filename, surfaceView, background);
+        if (bitmap == null) {
+            bitmap = resetBitmap(bitmap, surfaceView, background);
+        }
+        Canvas lockCanvas = surfaceView.getHolder().lockCanvas();
+        Rect rect = new Rect(0, 0, surfaceView.getWidth(), surfaceView.getHeight());
+        lockCanvas.drawBitmap(bitmap, null, rect, null);
+        surfaceView.getHolder().unlockCanvasAndPost(lockCanvas);
+        return bitmap;
+    }
+
+    public void saveBitmap(Bitmap bitmap, String filename) {
+
+        Log.d(TAG, "saveBitmap");
+//        String filename =  ((MainActivity)getActivity()).getCurrentDateString() + ".png";
+        File myExternalFile = new File(getExternalFilesDir(filepath), filename);
+        try {
+            FileOutputStream fos =  new FileOutputStream(myExternalFile);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.close();
+        } catch (Exception e) {
+            Log.d("SAVE_IMAGE", e.getMessage(), e);
+        }
+    }
+
+    public void drawScribbleToBitmap(Bitmap bitmap, SurfaceView surfaceView, int background, List<TouchPoint> list, boolean eraser) {
+
+        Canvas canvas = new Canvas(bitmap);
+        Rect limit = new Rect();
+        Point offset = new Point();
+        surfaceView.getGlobalVisibleRect(limit,offset);
+
+        Path path = new Path();
+        PointF prePoint = new PointF(list.get(0).x, list.get(0).y);
+        path.moveTo(prePoint.x-offset.x, prePoint.y-offset.y);
+        for (TouchPoint point : list) {
+            path.quadTo(prePoint.x-offset.x, prePoint.y-offset.y, point.x-offset.x, point.y-offset.y);
+            prePoint.x = point.x;
+            prePoint.y = point.y;
+
+        }
+        if (eraser){
+            canvas.drawPath(path, eraserPaint);
+        }
+        else{
+            canvas.drawPath(path, penPaint);
+        }
+        Drawable drawable = ResourcesCompat.getDrawable(getResources(), background, null);
+        drawable.setBounds(0, 0,surfaceView.getWidth(), surfaceView.getHeight());
+        drawable.draw(canvas);
+
     }
 }
 

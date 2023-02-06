@@ -15,9 +15,377 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <include layout="@layout/content_main" />
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-<!--    <com.google.android.material.floatingactionbutton.FloatingActionButton-->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <LinearLayout
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:background="@color/white"
+                android:layout_weight="1"
+                android:theme="@style/Theme.DailyDiary.AppBarOverlay"
+                tools:context=".MainActivity">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="20dp"
+                    android:background="@color/white"
+                    android:layout_marginTop="20dp">
+
+                    <ImageButton
+                        android:id="@+id/imageButtonLeft"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:background="@null"
+                        android:layout_gravity="center_vertical|left"
+                        android:onClick="previousMonthAction"
+                        app:srcCompat="@drawable/chevron_left" />
+
+
+
+                    <TextView
+                        android:id="@+id/monthTV"
+                        android:layout_width="0dp"
+                        android:layout_weight="2"
+                        android:layout_height="wrap_content"
+                        android:text="January"
+                        android:textSize="20sp"
+                        android:textAlignment="center"
+                        android:textColor="@color/black"/>
+
+
+                    <ImageButton
+                        android:id="@+id/imageButtonRight"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:background="@null"
+                        android:layout_gravity="center_vertical|right"
+                        android:onClick="nextMonthAction"
+                        app:srcCompat="@drawable/chevron_right" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/Monday"
+                        android:textColor="@color/gray"
+                        android:textAlignment="center"
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/Tuesday"
+                        android:textColor="@color/gray"
+                        android:textAlignment="center"
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/Wednesday"
+                        android:textColor="@color/gray"
+                        android:textAlignment="center"
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/Thursday"
+                        android:textColor="@color/gray"
+                        android:textAlignment="center"
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/Friday"
+                        android:textColor="@color/gray"
+                        android:textAlignment="center"
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/Saturday"
+                        android:textColor="@color/gray"
+                        android:textAlignment="center"
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/Sunday"
+                        android:textColor="@color/gray"
+                        android:textAlignment="center"
+                        android:textSize="16sp"/>
+
+
+                </LinearLayout>
+
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/calendarRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+
+            </LinearLayout>
+
+
+
+
+
+            <LinearLayout
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:background="@color/white"
+                android:layout_weight="1.5"
+                android:theme="@style/Theme.DailyDiary.AppBarOverlay"
+                tools:context=".MainActivity">
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:layout_weight="1"
+                        android:background="@color/black">
+
+
+
+                        <RelativeLayout
+                            android:id="@+id/fragment_container_view"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:paddingLeft="0dp"
+                            android:paddingTop="0dp"
+                            android:paddingRight="0dp"
+                            android:paddingBottom="0dp">
+
+                            <LinearLayout
+                                android:id="@+id/layout_function"
+                                android:layout_width="match_parent"
+                                android:layout_height="50dp"
+                                android:orientation="horizontal">
+
+
+                                <TextView
+                                    android:id="@+id/task_text"
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="30dp"
+                                    android:layout_gravity="center_vertical|left"
+                                    android:paddingLeft="10dp"
+                                    android:textColor="@color/white"
+                                    android:textSize="22sp"
+                                    android:text="Tasks" />
+
+
+                                <!--            <ImageButton-->
+                                <!--                android:id="@+id/clear_tasks"-->
+                                <!--                android:layout_width="wrap_content"-->
+                                <!--                android:layout_height="wrap_content"-->
+                                <!--                android:layout_weight="1"-->
+
+                                <!--                android:background="@null"-->
+                                <!--                android:layout_gravity="center_vertical|start"-->
+                                <!--                app:srcCompat="@drawable/delete_all" />-->
+
+                                <Button
+                                    android:id="@+id/clear_tasks"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="match_parent"
+                                    android:layout_weight="0.05"
+                                    android:textSize="16sp"
+                                    android:stateListAnimator="@null"
+                                    android:text="Clear all" />
+
+
+                            </LinearLayout>
+
+                            <SurfaceView
+                                android:id="@+id/taskssurfaceview"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_below="@id/layout_function"
+                                android:visibility="visible" />
+
+                        </RelativeLayout>
+
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_weight="1"
+                        android:background="@color/black" >
+
+
+                        <RelativeLayout
+                            android:id="@+id/fragment_container_view_summary"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:paddingLeft="0dp"
+                            android:paddingTop="0dp"
+                            android:paddingRight="0dp"
+                            android:paddingBottom="0dp">
+
+                            <LinearLayout
+                                android:id="@+id/layout_function2"
+                                android:layout_width="match_parent"
+                                android:layout_height="50dp"
+                                android:orientation="horizontal">
+
+
+                                <TextView
+                                    android:id="@+id/summary_text"
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="30dp"
+                                    android:layout_gravity="center_vertical|left"
+                                    android:paddingLeft="10dp"
+                                    android:textColor="@color/white"
+                                    android:textSize="22sp"
+                                    android:text="Daily Summary" />
+
+
+                                <Button
+                                    android:id="@+id/opendiary"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="match_parent"
+                                    android:layout_weight="0.1"
+                                    android:stateListAnimator="@null"
+                                    android:textSize="16sp"
+                                    android:text="Open Diary" />
+
+
+                                <Button
+                                    android:id="@+id/clearsummary"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="match_parent"
+                                    android:layout_weight="0.1"
+                                    android:stateListAnimator="@null"
+                                    android:textSize="16sp"
+                                    android:text="Clear summary" />
+
+
+                            </LinearLayout>
+
+                            <SurfaceView
+                                android:id="@+id/summarysurfaceview"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_below="@id/layout_function2"
+                                android:visibility="visible" />
+
+
+                        </RelativeLayout>
+
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+
+
+
+            </LinearLayout>
+
+            <!--        <LinearLayout-->
+            <!--            xmlns:tools="http://schemas.android.com/tools"-->
+            <!--            android:layout_width="match_parent"-->
+            <!--            android:layout_height="match_parent"-->
+            <!--            android:orientation="vertical"-->
+            <!--            android:background="@color/white"-->
+            <!--            android:layout_weight="1.5"-->
+            <!--            android:theme="@style/Theme.DailyDiary.AppBarOverlay"-->
+            <!--            tools:context=".MainActivity">-->
+
+
+            <!--            <LinearLayout-->
+            <!--                android:layout_width="match_parent"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:orientation="horizontal">-->
+
+            <!--                <TextView-->
+            <!--                    android:layout_width="0dp"-->
+            <!--                    android:layout_height="wrap_content"-->
+            <!--                    android:layout_weight="1"-->
+            <!--                    android:text="@string/Monday"-->
+            <!--                    android:textColor="@color/gray"-->
+            <!--                    android:textAlignment="center"-->
+            <!--                    android:textSize="16sp"/>-->
+
+            <!--                <TextView-->
+            <!--                    android:layout_width="0dp"-->
+            <!--                    android:layout_height="wrap_content"-->
+            <!--                    android:layout_weight="1"-->
+            <!--                    android:text="@string/Tuesday"-->
+            <!--                    android:textColor="@color/gray"-->
+            <!--                    android:textAlignment="center"-->
+            <!--                    android:textSize="16sp"/>-->
+
+            <!--            </LinearLayout>-->
+
+
+
+
+            <!--        </LinearLayout>-->
+
+        </LinearLayout>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!--    <com.google.android.material.floatingactionbutton.FloatingActionButton-->
 <!--        android:id="@+id/fab"-->
 <!--        android:layout_width="wrap_content"-->
 <!--        android:layout_height="wrap_content"-->

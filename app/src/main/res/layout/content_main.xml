@@ -170,18 +170,66 @@
                     android:background="@color/black">
 
 
-                    <!-- res/layout/example_activity.xml -->
-                    <androidx.fragment.app.FragmentContainerView
-                        xmlns:android="http://schemas.android.com/apk/res/android"
+
+                    <RelativeLayout
                         android:id="@+id/fragment_container_view"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_margin="2dp"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        android:name="com.onyx.dailydiary.TasksFragment" />
+                        android:paddingLeft="0dp"
+                        android:paddingTop="0dp"
+                        android:paddingRight="0dp"
+                        android:paddingBottom="0dp">
+
+                    <LinearLayout
+                        android:id="@+id/layout_function"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:orientation="horizontal">
+
+
+                        <TextView
+                            android:id="@+id/task_text"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="30dp"
+                            android:layout_gravity="center_vertical|left"
+                            android:paddingLeft="10dp"
+                            android:textColor="@color/white"
+                            android:textSize="22sp"
+                            android:text="Tasks" />
+
+
+                        <!--            <ImageButton-->
+                        <!--                android:id="@+id/clear_tasks"-->
+                        <!--                android:layout_width="wrap_content"-->
+                        <!--                android:layout_height="wrap_content"-->
+                        <!--                android:layout_weight="1"-->
+
+                        <!--                android:background="@null"-->
+                        <!--                android:layout_gravity="center_vertical|start"-->
+                        <!--                app:srcCompat="@drawable/delete_all" />-->
+
+                        <Button
+                            android:id="@+id/button"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_weight="0.05"
+                            android:textSize="16sp"
+                            android:stateListAnimator="@null"
+                            android:text="Clear all" />
+
+
+                    </LinearLayout>
+
+                    <SurfaceView
+                        android:id="@+id/taskssurfaceview"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_below="@id/layout_function"
+                        android:visibility="visible" />
+
+                    </RelativeLayout>
+
 
                 </LinearLayout>
 
@@ -193,18 +241,66 @@
                     android:background="@color/black" >
 
 
-
-                    <androidx.fragment.app.FragmentContainerView
-                        xmlns:android="http://schemas.android.com/apk/res/android"
+                    <RelativeLayout
                         android:id="@+id/fragment_container_view_summary"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_margin="2dp"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        android:name="com.onyx.dailydiary.SummaryFragment" />
+                        android:paddingLeft="0dp"
+                        android:paddingTop="0dp"
+                        android:paddingRight="0dp"
+                        android:paddingBottom="0dp">
+
+                        <LinearLayout
+                            android:id="@+id/layout_function2"
+                            android:layout_width="match_parent"
+                            android:layout_height="50dp"
+                            android:orientation="horizontal">
+
+
+                            <TextView
+                                android:id="@+id/summary_text"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="30dp"
+                                android:layout_gravity="center_vertical|left"
+                                android:paddingLeft="10dp"
+                                android:textColor="@color/white"
+                                android:textSize="22sp"
+                                android:text="Daily Summary" />
+
+
+                            <Button
+                                android:id="@+id/opendiary"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:layout_weight="0.1"
+                                android:stateListAnimator="@null"
+                                android:textSize="16sp"
+                                android:text="Open Diary" />
+
+
+                            <Button
+                                android:id="@+id/clearsummary"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:layout_weight="0.1"
+                                android:stateListAnimator="@null"
+                                android:textSize="16sp"
+                                android:text="Clear summary" />
+
+
+                        </LinearLayout>
+
+                        <SurfaceView
+                            android:id="@+id/summarysurfaceview"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_below="@id/layout_function2"
+                            android:visibility="visible" />
+
+
+                    </RelativeLayout>
+
 
                 </LinearLayout>
 
