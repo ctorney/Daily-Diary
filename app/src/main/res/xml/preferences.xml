@@ -11,15 +11,15 @@
         android:title="Location of calendar ics file" />
 
 
-    <EditTextPreference
-        android:defaultValue="4"
-        android:key="pen_width"
-        android:selectAllOnFocus="true"
-        android:singleLine="true"
-        android:inputType="numberDecimal"
-        android:digits="0123456789"
-        app:useSimpleSummaryProvider="true"
-        android:title="Pen width" />
+<!--    <EditTextPreference-->
+<!--        android:defaultValue="4"-->
+<!--        android:key="pen_width"-->
+<!--        android:selectAllOnFocus="true"-->
+<!--        android:singleLine="true"-->
+<!--        android:inputType="numberDecimal"-->
+<!--        android:digits="0123456789"-->
+<!--        app:useSimpleSummaryProvider="true"-->
+<!--        android:title="Pen width" />-->
 
 
 </PreferenceScreen>

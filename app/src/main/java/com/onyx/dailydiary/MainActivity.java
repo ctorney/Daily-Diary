@@ -78,6 +78,8 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     private Bitmap tasksBitmap;
     private Bitmap summaryBitmap;
     public List<TouchPoint> points = new ArrayList<>();
+    private List<TouchPointList> pointLists = new ArrayList<>();
+
 
     private CalendarViewHolder lastHolder = null;
     private boolean redrawRunning = false;
@@ -113,6 +115,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
         setMonthView();
         touchHelper = TouchHelper.create(getWindow().getDecorView().getRootView(), getRawInputCallback());
+
 
         initSurfaceView(binding.taskssurfaceview);
         initSurfaceView(binding.summarysurfaceview);
@@ -159,6 +162,9 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                 tasksBitmap = safeLoadBitmap(tasksBitmap, tasksfilename, binding.taskssurfaceview, R.drawable.lines);
                 String summaryFilename =  getCurrentDateString() + ".png";
                 summaryBitmap = safeLoadBitmap(summaryBitmap, summaryFilename, binding.summarysurfaceview, R.drawable.finelines);
+                touchHelper.setStrokeWidth(STROKE_WIDTH);
+                touchHelper.setStrokeStyle(TouchHelper.STROKE_STYLE_MARKER);
+                touchHelper.setStrokeColor(Color.BLACK);
                 touchHelper.setLimitRect(limitRectList, new ArrayList<Rect>())
                         .openRawDrawing();
                 touchHelper.setRawDrawingEnabled(false);
@@ -259,6 +265,8 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
             @Override
             public void onScreenOn() {
                 Log.d(TAG, "onScreenOn");
+                selectedDate = LocalDate.now();
+                setMonthView();
 //                renderToScreen(binding.surfaceview, bitmap);
             }
         });
@@ -327,8 +335,12 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         if (limitRectList.size() < 2) {
             return;
         }
+        touchHelper.setStrokeWidth(STROKE_WIDTH);
+        touchHelper.setStrokeStyle(TouchHelper.STROKE_STYLE_MARKER);
+        touchHelper.setStrokeColor(Color.BLACK);
         touchHelper.setLimitRect(limitRectList, new ArrayList<Rect>())
                 .openRawDrawing();
+
         touchHelper.setRawDrawingEnabled(false);
         touchHelper.setMultiRegionMode();
         touchHelper.setRawDrawingEnabled(true);
@@ -525,7 +537,37 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         }
     }
 
-    public void drawScribbleToBitmap(Bitmap bitmap, SurfaceView surfaceView, int background, List<TouchPoint> list, boolean eraser) {
+    public void drawToBitmap(Bitmap bitmap, SurfaceView surfaceView, int background) {
+
+        Canvas canvas = new Canvas(bitmap);
+        Rect limit = new Rect();
+        Point offset = new Point();
+        surfaceView.getGlobalVisibleRect(limit,offset);
+
+        Path path = new Path();
+
+        for (TouchPointList pointList : pointLists) {
+            List<TouchPoint> list = pointList.getRenderPoints();
+
+
+            PointF prePoint = new PointF(list.get(0).x, list.get(0).y);
+            path.moveTo(prePoint.x-offset.x, prePoint.y-offset.y);
+            for (TouchPoint point : list) {
+                path.quadTo(prePoint.x-offset.x, prePoint.y-offset.y, point.x-offset.x, point.y-offset.y);
+                prePoint.x = point.x;
+                prePoint.y = point.y;
+            }
+        }
+
+        canvas.drawPath(path, penPaint);
+
+        Drawable drawable = ResourcesCompat.getDrawable(getResources(), background, null);
+        drawable.setBounds(0, 0,surfaceView.getWidth(), surfaceView.getHeight());
+        drawable.draw(canvas);
+
+    }
+
+    public void eraseBitmap(Bitmap bitmap, SurfaceView surfaceView, int background, List<TouchPoint> list) {
 
         Canvas canvas = new Canvas(bitmap);
         Rect limit = new Rect();
@@ -540,12 +582,9 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
             prePoint.x = point.x;
             prePoint.y = point.y;
         }
-        if (eraser){
-            canvas.drawPath(path, eraserPaint);
-        }
-        else{
-            canvas.drawPath(path, penPaint);
-        }
+
+        canvas.drawPath(path, eraserPaint);
+
         Drawable drawable = ResourcesCompat.getDrawable(getResources(), background, null);
         drawable.setBounds(0, 0,surfaceView.getWidth(), surfaceView.getHeight());
         drawable.draw(canvas);
@@ -577,6 +616,9 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                                     currentTime = currentTimeMillis();
                                 }
                                 Log.d(TAG, "thread: redrawing");
+                                drawToBitmap(tasksBitmap,binding.taskssurfaceview, R.drawable.lines);
+                                drawToBitmap(summaryBitmap,binding.summarysurfaceview, R.drawable.finelines);
+                                pointLists.clear();
 
                                 redrawSurface(tasksBitmap, binding.taskssurfaceview);
                                 redrawSurface(summaryBitmap, binding.summarysurfaceview);
@@ -597,8 +639,8 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
                 @Override
                 public void onRawDrawingTouchPointListReceived(TouchPointList touchPointList) {
-                    drawScribbleToBitmap(tasksBitmap,binding.taskssurfaceview, R.drawable.lines, touchPointList.getPoints(), false);
-                    drawScribbleToBitmap(summaryBitmap,binding.summarysurfaceview, R.drawable.finelines, touchPointList.getPoints(), false);
+                    pointLists.add(touchPointList);
+
                 }
 
                 @Override
@@ -624,8 +666,8 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                         for (TouchPoint point : pointList) {
                             touchPointList.add(point);
                         }
-                        drawScribbleToBitmap(tasksBitmap,binding.taskssurfaceview, R.drawable.lines, touchPointList.getPoints(), true);
-                        drawScribbleToBitmap(summaryBitmap,binding.summarysurfaceview, R.drawable.finelines, touchPointList.getPoints(), true);
+                        eraseBitmap(tasksBitmap,binding.taskssurfaceview, R.drawable.lines, touchPointList.getPoints());
+                        eraseBitmap(summaryBitmap,binding.summarysurfaceview, R.drawable.finelines, touchPointList.getPoints());
 
                     }
 
@@ -634,8 +676,8 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                 @Override
                 public void onRawErasingTouchPointListReceived(TouchPointList touchPointList) {
                     Log.d(TAG, "onRawErasingTouchPointListReceived");
-                    drawScribbleToBitmap(tasksBitmap,binding.taskssurfaceview, R.drawable.lines, touchPointList.getPoints(), true);
-                    drawScribbleToBitmap(summaryBitmap,binding.summarysurfaceview, R.drawable.finelines, touchPointList.getPoints(), true);
+                    eraseBitmap(tasksBitmap,binding.taskssurfaceview, R.drawable.lines, touchPointList.getPoints());
+                    eraseBitmap(summaryBitmap,binding.summarysurfaceview, R.drawable.finelines, touchPointList.getPoints());
 
                 }
             };
