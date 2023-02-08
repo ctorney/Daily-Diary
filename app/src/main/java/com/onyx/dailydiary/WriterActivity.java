@@ -21,6 +21,8 @@ import com.onyx.android.sdk.pen.TouchHelper;
 import com.onyx.android.sdk.pen.data.TouchPointList;
 
 import android.annotation.SuppressLint;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -38,6 +40,8 @@ import android.graphics.drawable.Drawable;
 import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.text.method.Touch;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -86,6 +90,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
     private List<TouchPoint> points = new ArrayList<>();
 
     private List<TouchPointList> pointLists = new ArrayList<>();
+    private int maxTouchPoints = 100;
     String currentdatestring;
     int daypage;
     int daypageCount;
@@ -533,7 +538,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
                     }
                 };
-                new Thread(thread).start();    //use start() instead of run()
+//                new Thread(thread).start();    //use start() instead of run()
             }
 
         }
@@ -601,6 +606,10 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
     public void drawToBitmap() {
 
+        if (pointLists.isEmpty())
+        {
+            return;
+        }
         needsSave=true;
         Log.d(TAG, "drawScribbleToBitmap");
         Canvas canvas = new Canvas(bitmap);
@@ -627,7 +636,10 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     public void eraseBitmap(List<TouchPoint> list) {
-
+        if (!pointLists.isEmpty())
+        {
+            drawToBitmap();
+        }
         needsSave=true;
         Log.d(TAG, "drawScribbleToBitmap");
         Canvas canvas = new Canvas(bitmap);
@@ -657,6 +669,10 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
         if (!binding.writerview.getHolder().getSurface().isValid()){
             return;
         }
+        if (!pointLists.isEmpty())
+        {
+            drawToBitmap();
+        }
         touchHelper.setRawDrawingRenderEnabled(false);// debug
         Log.d(TAG, "redrawSurface");
         Canvas lockCanvas = binding.writerview.getHolder().lockCanvas();
@@ -667,7 +683,9 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     public void saveBitmap() {
+
         Log.d(TAG, "saveBitmap");
+        drawToBitmap();
         if (needsSave) {
             File myExternalFile = new File(getExternalFilesDir(filepath), filename);
             try {
@@ -760,7 +778,6 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
         }
 
-        File exportedFile = new File(getExternalFilesDir(filepath), outputFilename);
 
 
         PdfDocument pdfDocument = new PdfDocument();
@@ -823,29 +840,56 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
             }
         }
 
+//
+//        File exportedFile = new File(getExternalFilesDir(filepath), outputFilename);
+//
+//        try {
+//            // after creating a file name we will
+//            // write our PDF file to that location.
+//            pdfDocument.writeTo(new FileOutputStream(exportedFile));
+//            Toast.makeText(this, "PDF file generated successfully.", Toast.LENGTH_SHORT).show();
+//        } catch (IOException e) {
+//            // below line is used
+//            // to handle error
+//            e.printStackTrace();
+//        }
+//        // after storing our pdf to that
+//        // location we are closing our PDF file.
+//        pdfDocument.close();
+//        Uri path = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID.toString() + ".provider", exportedFile);
+//
+//        Intent intent = new Intent(Intent.ACTION_VIEW);
+//        intent.setDataAndType(path, "application/pdf");
+//
+//        intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+//        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+//        startActivity(intent);
 
-        try {
-            // after creating a file name we will
-            // write our PDF file to that location.
-            pdfDocument.writeTo(new FileOutputStream(exportedFile));
-            Toast.makeText(this, "PDF file generated successfully.", Toast.LENGTH_SHORT).show();
-        } catch (IOException e) {
-            // below line is used
-            // to handle error
+
+        ContentResolver resolver = this.getContentResolver();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, outputFilename);
+        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf");
+        contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+
+        Uri path = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues);
+
+        try{
+            pdfDocument.writeTo(resolver.openOutputStream(path));
+        }
+        catch (IOException e){
             e.printStackTrace();
         }
-        // after storing our pdf to that
-        // location we are closing our PDF file.
         pdfDocument.close();
-        Uri path = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID.toString() + ".provider", exportedFile);
 
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setDataAndType(path, "application/pdf");
 
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
         startActivity(intent);
-
         return;
     }
 

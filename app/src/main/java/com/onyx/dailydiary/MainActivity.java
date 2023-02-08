@@ -59,6 +59,7 @@ import androidx.appcompat.widget.Toolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.onyx.android.sdk.api.device.epd.EpdController;
+import com.onyx.android.sdk.api.device.epd.UpdateMode;
 import com.onyx.android.sdk.data.note.TouchPoint;
 import com.onyx.android.sdk.pen.RawInputCallback;
 import com.onyx.android.sdk.pen.TouchHelper;
@@ -154,7 +155,8 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
         Log.d(TAG, "onResume");
         super.onResume();
-
+        View view = binding.getRoot();
+        EpdController.repaintEveryThing(UpdateMode.DU_QUALITY);
         Runnable thread = new Runnable()
         {
             public void run()
