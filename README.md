@@ -1,6 +1,6 @@
 # Daily-Diary
 
-A daily organiser and notes app for the Onyx Boox.
+A daily organiser and notes app for Onyx Boox devices.
 
 
 <div align="center">
