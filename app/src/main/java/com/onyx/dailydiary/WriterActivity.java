@@ -86,7 +86,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
     private boolean needsSave = false;
     private long lastDraw = 0;
-    private long refreshInterval = 1000;
+    private long refreshInterval = 5000;
     private List<TouchPoint> points = new ArrayList<>();
 
     private List<TouchPointList> pointLists = new ArrayList<>();
@@ -538,7 +538,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
                     }
                 };
-//                new Thread(thread).start();    //use start() instead of run()
+                new Thread(thread).start();    //use start() instead of run()
             }
 
         }
