@@ -5,8 +5,8 @@ A calendar and daily notes app for Onyx Boox devices. Only currently tested on M
 ## Features
 
 - links a calendar with a full screen daily notes page
-- it's possible to add or delete pages for a given day
-- day, month, or week notes can be exported to pdf
+- possible to add or delete pages for a given day
+- day, month, or year notes can be exported to pdf
 - persistent to do list and summary of each day 
 - displays calendar events from ical feed url (not yet implemented)
 
