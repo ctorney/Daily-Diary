@@ -1,10 +1,24 @@
-# Daily-Diary
+# Daily Diary
 
-A daily organiser and notes app for Onyx Boox devices.
+A calendar and daily notes app for Onyx Boox devices. Only currently tested on Max Lumi.
+
+## Features
+
+- links a calendar with a full screen daily notes page
+- it's possible to add or delete pages for a given day
+- day, month, or week notes can be exported to pdf
+- persistent to do list and summary of each day 
+- displays calendar events from ical feed url (not yet implemented)
 
 
 <div align="center">
-    <img src="resources/calendar.png" width="400px"</img> 
-        <img src="resources/diarypage.png" width="400px"</img> 
+    <img src="resources/calendar.png" width="300px"</img> 
+        <img src="resources/diarypage.png" width="300px"</img> 
 
 </div>
+
+## Still to do
+- [ ] swipe gestures
+- [ ] calendar import and display
+- [ ] pen settings?
+- [ ] improve bitmap redraw/touch helper code 
