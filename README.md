@@ -17,6 +17,9 @@ A calendar and daily notes app for Onyx Boox devices. Only currently tested on M
 
 </div>
 
+
+Pre-release apk available [here](app/build/outputs/apk/debug/app-debug.apk)
+
 ## Still to do
 - [ ] swipe gestures
 - [ ] calendar import and display
