@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.core.view.GestureDetectorCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
@@ -36,6 +37,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -80,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     private Bitmap summaryBitmap;
     public List<TouchPoint> points = new ArrayList<>();
     private List<TouchPointList> pointLists = new ArrayList<>();
+    private GestureDetectorCompat mDetector;
 
 
     private CalendarViewHolder lastHolder = null;
@@ -116,7 +119,20 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
         setMonthView();
         touchHelper = TouchHelper.create(getWindow().getDecorView().getRootView(), getRawInputCallback());
-
+//        mDetector = new GestureDetectorCompat(this,new GestureListener(){
+//            @Override
+//            public void onSwipeRight() {
+//                    selectedDate = selectedDate.minusMonths(1);
+//                    setMonthView();
+//            }
+//
+//            @Override
+//            public void onSwipeLeft() {
+//                selectedDate = selectedDate.plusMonths(1);
+//                setMonthView();
+//            }
+//
+//        });
 
         initSurfaceView(binding.taskssurfaceview);
         initSurfaceView(binding.summarysurfaceview);
@@ -149,7 +165,15 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         String summaryFilename =  getCurrentDateString() + ".png";
         saveBitmap(summaryBitmap, summaryFilename);
     }
-
+//    @Override
+//    public boolean onTouchEvent(MotionEvent event){
+//        Log.d(TAG, "onTouchEvent");
+//
+//        if (this.mDetector.onTouchEvent(event)) {
+//            return true;
+//        }
+//        return super.onTouchEvent(event);
+//    }
     @Override
     public void onResume() {
 
@@ -309,6 +333,17 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     private void initWidgets()
     {
         calendarRecyclerView = findViewById(R.id.calendarRecyclerView);
+//        calendarRecyclerView.setOnTouchListener(new View.OnTouchListener() {
+//            public boolean onTouch(View v, MotionEvent event) {
+//                Log.d(TAG, "onTouch calendar");
+//                if (mDetector.onTouchEvent(event)) {
+//                    return true;
+//                }
+//                return true;
+//
+//            }
+//        });
+
         monthText = findViewById(R.id.monthTV);
     }
 
