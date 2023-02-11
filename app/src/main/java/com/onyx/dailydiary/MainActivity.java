@@ -119,6 +119,8 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
         setMonthView();
         touchHelper = TouchHelper.create(getWindow().getDecorView().getRootView(), getRawInputCallback());
+        touchHelper.debugLog(false);
+        touchHelper.setRawInputReaderEnable(true);
 //        mDetector = new GestureDetectorCompat(this,new GestureListener(){
 //            @Override
 //            public void onSwipeRight() {

@@ -14,6 +14,7 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.core.view.GestureDetectorCompat;
 import androidx.databinding.DataBindingUtil;
 
+import com.onyx.android.sdk.api.device.epd.EpdController;
 import com.onyx.android.sdk.data.note.TouchPoint;
 import com.onyx.android.sdk.pen.RawInputCallback;
 import com.onyx.android.sdk.pen.TouchHelper;
@@ -115,11 +116,6 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
         initSurfaceView();
         initPaint();
         mDetector = new GestureDetectorCompat(this,new GestureListener(){
-            @Override
-            public boolean onDoubleTap(MotionEvent event) {
-                addPage();
-                return true;
-            }
 
             @Override
             public void onSwipeBottom() {
@@ -138,7 +134,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
             @Override
             public void onSwipeTop() {
-                savePages();
+                addPage();
             }
         });
 
@@ -232,6 +228,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
             touchHelper.setRawDrawingEnabled(true);
             touchHelper.enableFingerTouch(true);
             touchHelper.setRawDrawingRenderEnabled(true);
+            touchHelper.setRawInputReaderEnable(true);
 
             Log.d(TAG, "Thread complete");
 
@@ -298,8 +295,10 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
                 touchHelper.setRawDrawingEnabled(false);
                 touchHelper.setSingleRegionMode();
                 touchHelper.setRawDrawingEnabled(true);
-                touchHelper.enableFingerTouch(true);
+                touchHelper.enableFingerTouch(false);
                 touchHelper.setRawDrawingRenderEnabled(true);
+                touchHelper.setRawInputReaderEnable(true);
+
 
                 binding.writerview.addOnLayoutChangeListener(this);
             }
@@ -547,13 +546,14 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
         @Override
         public void onBeginRawDrawing(boolean b, TouchPoint touchPoint) {
             Log.d(TAG, "onBeginRawDrawing");
+            disableFingerTouch(getApplicationContext());
             points.clear();
         }
 
         @Override
         public void onEndRawDrawing(boolean b, TouchPoint touchPoint) {
             Log.d(TAG, "onEndRawDrawing");
-
+            enableFingerTouch(getApplicationContext());
             // this on and off seems to be important for stopping the thread
             touchHelper.setRawDrawingEnabled(false);
             touchHelper.setRawDrawingEnabled(true);
@@ -602,6 +602,8 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
         public void onBeginRawErasing(boolean b, TouchPoint touchPoint) {
             Log.d(TAG, "onBeginRawErasing");
             points.clear();
+            disableFingerTouch(getApplicationContext());
+
             redrawSurface();
         }
 
@@ -617,6 +619,8 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
             }
             eraseBitmap(pointList);
             redrawSurface();
+            enableFingerTouch(getApplicationContext());
+
         }
 
         @Override
@@ -659,6 +663,18 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
                     });
         }
     };
+
+    public static void disableFingerTouch(Context context) {
+        int width = context.getResources().getDisplayMetrics().widthPixels;
+        int height = context.getResources().getDisplayMetrics().heightPixels;
+        Rect rect = new Rect(0, 0, width, height);
+        Rect[] arrayRect =new Rect[]{rect};
+        EpdController.setAppCTPDisableRegion(context, arrayRect);
+    }
+
+    public static void enableFingerTouch(Context context) {
+        EpdController.appResetCTPDisableRegion(context);
+    }
 
     private RxManager getRxManager() {
         if (rxManager == null) {

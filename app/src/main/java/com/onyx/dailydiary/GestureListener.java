@@ -6,8 +6,8 @@ import android.view.MotionEvent;
 
 class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
-    public static final int SWIPE_VELOCITY_THRESHOLD = 100;
-    public static final int SWIPE_THRESHOLD = 100;
+    public static final int SWIPE_VELOCITY_THRESHOLD = 1000;
+    public static final int SWIPE_THRESHOLD = 400;
     private static final String TAG = GestureListener.class.getSimpleName();
 
     @Override
@@ -18,10 +18,10 @@ class GestureListener extends GestureDetector.SimpleOnGestureListener {
     @Override
     public boolean onFling(MotionEvent event1, MotionEvent event2,
                            float velocityX, float velocityY) {
-        Log.d(TAG, "onFling: " + event1.toString() + event2.toString());
 
         float diffY = event2.getY() - event1.getY();
         float diffX = event2.getX() - event1.getX();
+        Log.d(TAG, "onFling: " + diffY + " " +diffX +  " " + velocityX + " " +velocityY);
 
         if (Math.abs(diffX) > Math.abs(diffY)){
 
