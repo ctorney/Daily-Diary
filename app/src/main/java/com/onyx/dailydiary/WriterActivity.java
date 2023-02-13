@@ -84,7 +84,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
     private TouchHelper touchHelper;
     private final float STROKE_WIDTH = 4.0f;
-    private boolean redrawRunning = false;
+    private boolean rawDrawing = false;
     private String filepath = "DailyDiary";
     private String filename;
     public Bitmap bitmap;
@@ -92,8 +92,10 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
     private Paint eraserPaint = new Paint();
     private RxManager rxManager;
     private boolean needsSave = false;
-//    private long lastDraw = 0;
-//    private long refreshInterval = 5000;
+    private boolean rawInputRunning = false;
+    private boolean redrawRunning = false;
+    private long lastDraw = 0;
+    private long refreshInterval = 1000;
     private List<TouchPoint> points = new ArrayList<>();
     private Canvas canvas;
 //    private List<TouchPointList> pointLists = new ArrayList<>();
@@ -119,22 +121,30 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
             @Override
             public void onSwipeBottom() {
-                deletePage();
+                if (!rawDrawing){
+                    deletePage();
+                }
             }
 
             @Override
             public void onSwipeLeft() {
-                updatePage(true);
+                if (!rawDrawing){
+                    updatePage(true);
+                }
             }
 
             @Override
             public void onSwipeRight() {
-                updatePage(false);
+                if (!rawDrawing){
+                    updatePage(false);
+                }
             }
 
             @Override
             public void onSwipeTop() {
-                addPage();
+                if (!rawDrawing) {
+                    addPage();
+                }
             }
         });
 
@@ -545,57 +555,59 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
         @Override
         public void onBeginRawDrawing(boolean b, TouchPoint touchPoint) {
-            Log.d(TAG, "onBeginRawDrawing");
+//            Log.d(TAG, "onBeginRawDrawing");
             disableFingerTouch(getApplicationContext());
             points.clear();
+            rawDrawing = true;
+//            touchHelper.openRawDrawing();
         }
 
         @Override
         public void onEndRawDrawing(boolean b, TouchPoint touchPoint) {
-            Log.d(TAG, "onEndRawDrawing");
+//            Log.d(TAG, "onEndRawDrawing");
+            rawDrawing = false;
             enableFingerTouch(getApplicationContext());
-            // this on and off seems to be important for stopping the thread
-            touchHelper.setRawDrawingEnabled(false);
-            touchHelper.setRawDrawingEnabled(true);
-//            lastDraw = currentTimeMillis();
-//            if (!redrawRunning)
-//            {
-//                redrawRunning = true;
-//                Runnable thread = new Runnable()
-//                {
-//                    public void run()
-//                    {
-//                        long currentTime = currentTimeMillis();
-//                        while (currentTime<lastDraw + refreshInterval)
-//                        {
-//                            currentTime = currentTimeMillis();
-//                        }
-//                        Log.d(TAG, "thread: redrawing");
+//            touchHelper.closeRawDrawing();
+
+            lastDraw = currentTimeMillis();
+            if (!redrawRunning)
+            {
+                redrawRunning = true;
+                Runnable thread = new Runnable()
+                {
+                    public void run()
+                    {
+                        long currentTime = currentTimeMillis();
+                        while (currentTime<lastDraw + refreshInterval)
+                        {
+                            currentTime = currentTimeMillis();
+                        }
+                        Log.d(TAG, "thread: redrawing");
+
+                touchHelper.setRawDrawingEnabled(false);
+                touchHelper.setRawDrawingEnabled(true);
 //
 //                        drawToBitmap();
 //                        redrawSurface();
 //
-//                        redrawRunning = false;
+                        redrawRunning = false;
 //
-//                    }
-//                };
-////                new Thread(thread).start();    //use start() instead of run()
-//            }
+                    }
+                };
+                new Thread(thread).start();    //use start() instead of run()
+            }
 
         }
 
         @Override
         public void onRawDrawingTouchPointMoveReceived(TouchPoint touchPoint) {
-//            lastDraw = currentTimeMillis();
+            lastDraw = currentTimeMillis();
         }
 
         @Override
         public void onRawDrawingTouchPointListReceived(TouchPointList touchPointList) {
-            Log.d(TAG, "onRawDrawingTouchPointListReceived");
-//            pointLists.add(touchPointList);
+//            Log.d(TAG, "onRawDrawingTouchPointListReceived");
             drawToBitmap(touchPointList.getPoints());
-
-//            drawScribbleToBitmap(touchPointList.getPoints(),false);
         }
 
         @Override
@@ -603,6 +615,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
             Log.d(TAG, "onBeginRawErasing");
             points.clear();
             disableFingerTouch(getApplicationContext());
+            rawDrawing = true;
 
             redrawSurface();
         }
@@ -620,6 +633,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
             eraseBitmap(pointList);
             redrawSurface();
             enableFingerTouch(getApplicationContext());
+            rawDrawing = false;
 
         }
 
@@ -628,7 +642,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
             Log.d(TAG, "onRawErasingTouchPointMoveReceived");
 
             points.add(touchPoint);
-            if (points.size() >= 500) {
+            if (points.size() >= 50) {
                 List<TouchPoint> pointList = new ArrayList<>(points);
                 points.clear();
                 TouchPointList touchPointList = new TouchPointList();
@@ -651,9 +665,14 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
         @Override
         public void onPenUpRefresh(RectF refreshRect) {
-            Log.d(TAG, "onPenUpRefresh " + refreshRect);
-
-
+            Log.d(TAG, "onPenUpRefresh " + rawDrawing);
+//            // this on and off seems to be important for stopping the thread - but also may cause the writing pause
+//            if (!rawDrawing) {
+//                touchHelper.setRawDrawingEnabled(false);
+//                touchHelper.setRawDrawingEnabled(true);
+//            }
+//            touchHelper.
+//
             getRxManager().enqueue(new PartialRefreshRequest(WriterActivity.this, binding.writerview, refreshRect)
                             .setBitmap(bitmap),
                     new RxCallback<PartialRefreshRequest>() {

@@ -68,7 +68,6 @@ import com.onyx.android.sdk.pen.TouchHelper;
 import com.onyx.android.sdk.pen.data.TouchPointList;
 import com.onyx.android.sdk.rx.RxManager;
 import com.onyx.dailydiary.databinding.ActivityMainBinding;
-import com.onyx.dailydiary.databinding.ActivityWriterBinding;
 
 public class MainActivity extends AppCompatActivity implements CalendarAdapter.OnItemListener, View.OnClickListener
 {
