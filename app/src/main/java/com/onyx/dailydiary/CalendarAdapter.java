@@ -28,6 +28,9 @@ class CalendarAdapter extends RecyclerView.Adapter<CalendarViewHolder>
         this.onItemListener = onItemListener;
         this.selectedDate = selectedDate;
         this.currentDate = LocalDate.now();
+
+        iCalParser test = new iCalParser();
+
     }
 
     @NonNull

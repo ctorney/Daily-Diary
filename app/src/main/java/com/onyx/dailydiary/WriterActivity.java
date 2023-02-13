@@ -76,10 +76,10 @@ import java.util.Date;
 import java.util.List;
 
 public class WriterActivity extends AppCompatActivity implements View.OnClickListener{
-
+    private static final String TAG = WriterActivity.class.getSimpleName();
 
     private ActivityWriterBinding binding;
-    private static final String TAG = WriterActivity.class.getSimpleName();
+
     private GestureDetectorCompat mDetector;
 
     private TouchHelper touchHelper;
@@ -92,20 +92,18 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
     private Paint eraserPaint = new Paint();
     private RxManager rxManager;
     private boolean needsSave = false;
-    private boolean rawInputRunning = false;
     private boolean redrawRunning = false;
     private long lastDraw = 0;
-    private long refreshInterval = 1000;
+    private final long refreshInterval = 1000;
     private List<TouchPoint> points = new ArrayList<>();
     private Canvas canvas;
-//    private List<TouchPointList> pointLists = new ArrayList<>();
-//    private int maxTouchPoints = 100;
+
     String currentdatestring;
     int daypage;
     int daypageCount;
     TextView datebox;
     LocalDate currentdate;
-    @SuppressLint({"SimpleDateFormat", "SetTextI18n"})
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -115,31 +113,30 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
         binding = DataBindingUtil.setContentView(this, R.layout.activity_writer);
         touchHelper = TouchHelper.create(binding.writerview, callback);
 
+        // initialise surface and paints
         initSurfaceView();
         initPaint();
-        mDetector = new GestureDetectorCompat(this,new GestureListener(){
 
+        // setup the gestures
+        mDetector = new GestureDetectorCompat(this,new GestureListener(){
             @Override
             public void onSwipeBottom() {
                 if (!rawDrawing){
                     deletePage();
                 }
             }
-
             @Override
             public void onSwipeLeft() {
                 if (!rawDrawing){
                     updatePage(true);
                 }
             }
-
             @Override
             public void onSwipeRight() {
                 if (!rawDrawing){
                     updatePage(false);
                 }
             }
-
             @Override
             public void onSwipeTop() {
                 if (!rawDrawing) {
@@ -149,48 +146,39 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
         });
 
 
-
+        // setup the date
         currentdatestring = getIntent().getStringExtra("date-string");
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-MMMM-yyyy");
         currentdate = LocalDate.parse(currentdatestring,formatter);
-//            currentdate=new SimpleDateFormat("dd-MMMM-yyyy").parse(currentdatestring);
 
         daypage = 1;
         daypageCount = countDayPages();
 
-        datebox = (TextView)findViewById(R.id.date_text);
-
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd LLLL yyyy");
-        String formattedString = currentdate.format(DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy ("));
-
+        datebox = findViewById(R.id.date_text);
         datebox.setText(currentdate.format(DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy (")) + String.valueOf(daypage) + "/" + String.valueOf(daypageCount)+")");
-//        datebox.setText(new SimpleDateFormat("EEEE, d MMMM yyyy (").format(currentdate) + String.valueOf(daypage) + "/" + String.valueOf(daypageCount)+")");
-
-        filename = currentdate.format(DateTimeFormatter.ofPattern("yyyyMMdd-")) + String.valueOf(daypage) + ".png";
-//        filename = new SimpleDateFormat("yyyyMMdd-").format(currentdate) + String.valueOf(daypage) + ".png";
+        filename = currentdate.format(DateTimeFormatter.ofPattern("yyyyMMdd-")) + daypage + ".png";
 
 
-        ImageButton back_button = (ImageButton) findViewById(R.id.back_button);
+        // setup the buttons
+        ImageButton back_button = findViewById(R.id.back_button);
         back_button.setOnClickListener(this);
 
-        ImageButton nextpage_button = (ImageButton) findViewById(R.id.nextpage);
+        ImageButton nextpage_button = findViewById(R.id.nextpage);
         nextpage_button.setOnClickListener(this);
 
-        ImageButton prevpage_button = (ImageButton) findViewById(R.id.prevpage);
+        ImageButton prevpage_button = findViewById(R.id.prevpage);
         prevpage_button.setOnClickListener(this);
 
-        ImageButton addpage_button = (ImageButton) findViewById(R.id.addpage);
+        ImageButton addpage_button = findViewById(R.id.addpage);
         addpage_button.setOnClickListener(this);
 
-        ImageButton deletepage_button = (ImageButton) findViewById(R.id.deletepage);
+        ImageButton deletepage_button = findViewById(R.id.deletepage);
         deletepage_button.setOnClickListener(this);
 
-        ImageButton savepage_button = (ImageButton) findViewById(R.id.save);
+        ImageButton savepage_button = findViewById(R.id.save);
         savepage_button.setOnClickListener(this);
     }
-
-
 
     @Override
     public void onClick(View v) {
@@ -217,15 +205,13 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
 
         }
-        Log.d(TAG, "Writer onClick");
-
     }
     public void onResume() {
         Log.d(TAG, "onResume");
         super.onResume();
         Runnable thread = () -> {
-            safeLoadBitmap(); //debug
-            redrawSurface(); //debug
+            safeLoadBitmap();
+            redrawSurface();
             Rect limit = new Rect();
             binding.writerview.getLocalVisibleRect(limit);
             touchHelper.setStrokeWidth(STROKE_WIDTH);
@@ -240,12 +226,9 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
             touchHelper.setRawDrawingRenderEnabled(true);
             touchHelper.setRawInputReaderEnable(true);
 
-            Log.d(TAG, "Thread complete");
-
         };
-        Log.d(TAG, "start thread");
+
         new Thread(thread).start();
-        Log.d(TAG, "returning");
         return;
 
 
@@ -264,8 +247,6 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
     @Override
     protected void onPause() {
-        Log.d(TAG, "onPause");
-
         super.onPause();
         touchHelper.setRawDrawingEnabled(false);
         touchHelper.setRawDrawingRenderEnabled(false);
@@ -292,8 +273,6 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
             @Override
             public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int
                     oldRight, int oldBottom) {
-                Log.d(TAG, "- onLayoutChange");
-
                 Rect limit = new Rect();
                 binding.writerview.getLocalVisibleRect(limit);
 
@@ -315,17 +294,6 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
         });
 
 
-//        binding.writerview.setOnTouchListener(new View.OnTouchListener() {
-//            @SuppressLint("ClickableViewAccessibility")
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-//                Log.d(TAG, "surfaceView.setOnTouchListener - onTouch::action - " + event.getAction());
-//                Log.d(TAG, "width height " + binding.writerview.getWidth() + " " + binding.writerview.getHeight());
-//
-//                return true;
-//            }
-//        });
-
         final SurfaceHolder.Callback surfaceCallback = new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
@@ -334,12 +302,10 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
             @Override
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                Log.d(TAG, "surfaceChanged");
             }
 
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
-                Log.d(TAG, "surfaceDestroyed");holder.removeCallback(this);
             }
         };
         binding.writerview.getHolder().addCallback(surfaceCallback);
@@ -379,11 +345,8 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
     }
     private void updatePage(boolean forward)
     {
+        // move forward or backwards in the diary
         saveBitmap();
-
-        // convert date to calendar
-//        Calendar calendar = Calendar.getInstance();
-//        calendar.setTime(currentdate);
 
         if (forward){
             if (daypage < daypageCount){
@@ -391,13 +354,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
             }
             else{
                 daypage=1;
-//                calendar.add(Calendar.DATE, 1);
-                Log.d(TAG, "before: " + currentdate.toString());
-
-//                currentdate = calendar.getTime();
                 currentdate = currentdate.plusDays(1);
-                Log.d(TAG, currentdate.toString());
-
                 daypageCount = countDayPages();
             }
 
@@ -407,31 +364,22 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
                 daypage--;
             }
             else{
-//                calendar.add(Calendar.DATE, -1);
                 currentdate = currentdate.plusDays(-1);
-//                currentdate = calendar.getTime();
                 daypageCount = countDayPages();
                 daypage=daypageCount;
             }
         }
 
 
-        datebox = (TextView)findViewById(R.id.date_text);
+        datebox = findViewById(R.id.date_text);
         datebox.setText(currentdate.format(DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy (")) + String.valueOf(daypage) + "/" + String.valueOf(daypageCount)+")");
-//        datebox.setText(new SimpleDateFormat("EEEE, d MMMM yyyy (").format(currentdate) + String.valueOf(daypage) + "/" + String.valueOf(daypageCount)+")");
 
         filename = currentdate.format(DateTimeFormatter.ofPattern("yyyyMMdd-")) + String.valueOf(daypage) + ".png";
-//        datebox.setText(new SimpleDateFormat("EEEE, d MMMM yyyy (").format(currentdate) + String.valueOf(daypage) + "/" + String.valueOf(daypageCount)+")");
-
-//        filename = new SimpleDateFormat("yyyyMMdd-").format(currentdate) + String.valueOf(daypage) + ".png";
-
         safeLoadBitmap();
-
-
     }
 
     private void addPage(){
-
+        // add a page to the end and move forward
         needsSave = true;
         saveBitmap();
         daypageCount++;
@@ -440,6 +388,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     private void deletePage(){
+        // delete a page
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         builder.setTitle("Confirm delete");
@@ -498,15 +447,13 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     private void savePages(){
-
+        // let the user choose a time frame for export then export to pdf
         saveBitmap();
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.MaterialThemeDialog);
         String item[] = { "Day", "Month", "Year"};
 
         final int[] timeframe = {0};
         builder.setTitle("Select time interval for export")
-                // Specify the list array, the items to be selected by default (null for none),
-                // and the listener through which to receive callbacks when items are selected
                 .setSingleChoiceItems(item, 0,
                         new DialogInterface.OnClickListener() {
                             @Override
@@ -520,8 +467,6 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
                 .setPositiveButton("ok", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        // User clicked OK, so save the selectedItems results somewhere
-                        // or return them to the component that opened the dialog
                         try {
                             needsSave = true;
                             saveBitmap();
@@ -555,46 +500,38 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
         @Override
         public void onBeginRawDrawing(boolean b, TouchPoint touchPoint) {
-//            Log.d(TAG, "onBeginRawDrawing");
             disableFingerTouch(getApplicationContext());
             points.clear();
             rawDrawing = true;
-//            touchHelper.openRawDrawing();
         }
 
         @Override
         public void onEndRawDrawing(boolean b, TouchPoint touchPoint) {
-//            Log.d(TAG, "onEndRawDrawing");
             rawDrawing = false;
             enableFingerTouch(getApplicationContext());
-//            touchHelper.closeRawDrawing();
 
+            // wait until there's been no writing input then
+            // restart the touch helper - this is needed to
+            // keep the navigation ball working
             lastDraw = currentTimeMillis();
             if (!redrawRunning)
             {
                 redrawRunning = true;
-                Runnable thread = new Runnable()
-                {
-                    public void run()
+                Runnable thread = () -> {
+                    long currentTime = currentTimeMillis();
+                    while (currentTime<lastDraw + refreshInterval)
                     {
-                        long currentTime = currentTimeMillis();
-                        while (currentTime<lastDraw + refreshInterval)
-                        {
-                            currentTime = currentTimeMillis();
-                        }
-                        Log.d(TAG, "thread: redrawing");
-
-                touchHelper.setRawDrawingEnabled(false);
-                touchHelper.setRawDrawingEnabled(true);
-//
-//                        drawToBitmap();
-//                        redrawSurface();
-//
-                        redrawRunning = false;
-//
+                        currentTime = currentTimeMillis();
                     }
+                    Log.d(TAG, "thread: redrawing");
+
+                    touchHelper.setRawDrawingEnabled(false);
+                    touchHelper.setRawDrawingEnabled(true);
+
+                    redrawRunning = false;
+
                 };
-                new Thread(thread).start();    //use start() instead of run()
+                new Thread(thread).start();
             }
 
         }
@@ -606,23 +543,19 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
         @Override
         public void onRawDrawingTouchPointListReceived(TouchPointList touchPointList) {
-//            Log.d(TAG, "onRawDrawingTouchPointListReceived");
             drawToBitmap(touchPointList.getPoints());
         }
 
         @Override
         public void onBeginRawErasing(boolean b, TouchPoint touchPoint) {
-            Log.d(TAG, "onBeginRawErasing");
             points.clear();
             disableFingerTouch(getApplicationContext());
             rawDrawing = true;
-
             redrawSurface();
         }
 
         @Override
         public void onEndRawErasing(boolean b, TouchPoint touchPoint) {
-            Log.d(TAG, "onEndRawErasing");
             points.add(touchPoint);
             List<TouchPoint> pointList = new ArrayList<>(points);
             points.clear();
@@ -634,13 +567,10 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
             redrawSurface();
             enableFingerTouch(getApplicationContext());
             rawDrawing = false;
-
         }
 
         @Override
         public void onRawErasingTouchPointMoveReceived(TouchPoint touchPoint) {
-            Log.d(TAG, "onRawErasingTouchPointMoveReceived");
-
             points.add(touchPoint);
             if (points.size() >= 50) {
                 List<TouchPoint> pointList = new ArrayList<>(points);
@@ -651,7 +581,6 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
                 }
                 eraseBitmap(pointList);
                 redrawSurface();
-
             }
         }
 
@@ -665,14 +594,6 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
         @Override
         public void onPenUpRefresh(RectF refreshRect) {
-            Log.d(TAG, "onPenUpRefresh " + rawDrawing);
-//            // this on and off seems to be important for stopping the thread - but also may cause the writing pause
-//            if (!rawDrawing) {
-//                touchHelper.setRawDrawingEnabled(false);
-//                touchHelper.setRawDrawingEnabled(true);
-//            }
-//            touchHelper.
-//
             getRxManager().enqueue(new PartialRefreshRequest(WriterActivity.this, binding.writerview, refreshRect)
                             .setBitmap(bitmap),
                     new RxCallback<PartialRefreshRequest>() {
@@ -704,20 +625,10 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     public void drawToBitmap(List<TouchPoint> list) {
-
-//        if (pointLists.isEmpty())
-//        {
-//            return;
-//        }
+        // save all pen input to a bitmap
         needsSave=true;
-        Log.d(TAG, "drawToBitmap");
-//        Canvas canvas = new Canvas(bitmap);
-
-
         Path path = new Path();
 
-//        for (TouchPointList pointList : pointLists) {
-//            List<TouchPoint> list = pointList.getRenderPoints();
         PointF prePoint = new PointF(list.get(0).x, list.get(0).y);
         path.moveTo(prePoint.x, prePoint.y);
         for (TouchPoint point : list) {
@@ -725,27 +636,13 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
             prePoint.x = point.x;
             prePoint.y = point.y;
         }
-//        }
+
         canvas.drawPath(path, penPaint);
-        
-//        Drawable drawable = ResourcesCompat.getDrawable(getResources(), R.drawable.pagelines, null);
-//        drawable.setBounds(0, 0,binding.writerview.getWidth(), binding.writerview.getHeight());
-//        drawable.draw(canvas);
-//        pointLists.clear();
     }
 
     public void eraseBitmap(List<TouchPoint> list) {
-//        if (!pointLists.isEmpty())
-//        {
-//            drawToBitmap();
-//        }
+        // save all eraser input to a bitmap
         needsSave=true;
-        Log.d(TAG, "drawScribbleToBitmap");
-//        canvas = new Canvas(bitmap);
-
-        Rect limit = new Rect();
-        Point offset = new Point();
-        binding.writerview.getGlobalVisibleRect(limit,offset);
 
         Path path = new Path();
         PointF prePoint = new PointF(list.get(0).x, list.get(0).y);
@@ -757,21 +654,17 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
         }
         
         canvas.drawPath(path, eraserPaint);
-        
+
+        // add the background back on top as we're erasing with white ink
         Drawable drawable = ResourcesCompat.getDrawable(getResources(), R.drawable.pagelines, null);
         drawable.setBounds(0, 0,binding.writerview.getWidth(), binding.writerview.getHeight());
         drawable.draw(canvas);
 
     }
     public void redrawSurface() {
-
         if (!binding.writerview.getHolder().getSurface().isValid()){
             return;
         }
-//        if (!pointLists.isEmpty())
-//        {
-//            drawToBitmap();
-//        }
         touchHelper.setRawDrawingRenderEnabled(false);// debug
         Log.d(TAG, "redrawSurface");
         Canvas lockCanvas = binding.writerview.getHolder().lockCanvas();
@@ -782,9 +675,6 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     public void saveBitmap() {
-
-        Log.d(TAG, "saveBitmap");
-//        drawToBitmap();
         if (needsSave) {
             File myExternalFile = new File(getExternalFilesDir(filepath), filename);
             try {
@@ -852,6 +742,8 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     private void writeToPDF(int timeframe) throws FileNotFoundException {
+
+        // this code makes a pdf from the pages of the diary and opens it
         Toast.makeText(this, "Exporting to pdf...", Toast.LENGTH_LONG).show();
 
         LocalDate startDate = currentdate;
@@ -879,8 +771,6 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
         }
 
-
-
         PdfDocument pdfDocument = new PdfDocument();
 
         int pageHeight = 2200;
@@ -890,9 +780,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
         PdfDocument.Page startPage;
         int pageCount = 1;
         for (LocalDate printDate = startDate; !printDate.isAfter(endDate); printDate = printDate.plusDays(1)) {
-//            // Do your job here with `date`.
-//            System.out.println(printDate);
-//
+
             File dir = getExternalFilesDir(filepath);
             LocalDate finalPrintDate = printDate;
             File[] files = dir.listFiles(new FilenameFilter() {
@@ -906,7 +794,6 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
             for (int printPage = 1; printPage <= length; printPage++) {
                 String pageTitle = printDate.format(DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy (")) + String.valueOf(printPage) + "/" + String.valueOf(length) + ")";
-//
                 String printfilename = printDate.format(DateTimeFormatter.ofPattern("yyyyMMdd-")) + String.valueOf(printPage) + ".png";
 
 
@@ -940,32 +827,6 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
                 }
             }
         }
-
-//
-//        File exportedFile = new File(getExternalFilesDir(filepath), outputFilename);
-//
-//        try {
-//            // after creating a file name we will
-//            // write our PDF file to that location.
-//            pdfDocument.writeTo(new FileOutputStream(exportedFile));
-//            Toast.makeText(this, "PDF file generated successfully.", Toast.LENGTH_SHORT).show();
-//        } catch (IOException e) {
-//            // below line is used
-//            // to handle error
-//            e.printStackTrace();
-//        }
-//        // after storing our pdf to that
-//        // location we are closing our PDF file.
-//        pdfDocument.close();
-//        Uri path = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID.toString() + ".provider", exportedFile);
-//
-//        Intent intent = new Intent(Intent.ACTION_VIEW);
-//        intent.setDataAndType(path, "application/pdf");
-//
-//        intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-//        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-//        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
-//        startActivity(intent);
 
 
         ContentResolver resolver = this.getContentResolver();

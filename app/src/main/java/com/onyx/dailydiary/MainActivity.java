@@ -2,6 +2,7 @@ package com.onyx.dailydiary;
 
 import static java.lang.System.currentTimeMillis;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import androidx.core.content.ContextCompat;
@@ -28,6 +29,7 @@ import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.pdf.PdfDocument;
@@ -66,6 +68,7 @@ import com.onyx.android.sdk.data.note.TouchPoint;
 import com.onyx.android.sdk.pen.RawInputCallback;
 import com.onyx.android.sdk.pen.TouchHelper;
 import com.onyx.android.sdk.pen.data.TouchPointList;
+import com.onyx.android.sdk.rx.RxCallback;
 import com.onyx.android.sdk.rx.RxManager;
 import com.onyx.dailydiary.databinding.ActivityMainBinding;
 
@@ -80,25 +83,25 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     private Bitmap tasksBitmap;
     private Bitmap summaryBitmap;
     public List<TouchPoint> points = new ArrayList<>();
-    private List<TouchPointList> pointLists = new ArrayList<>();
-    private GestureDetectorCompat mDetector;
+    private RxManager rxManager;
 
 
     private CalendarViewHolder lastHolder = null;
     private boolean redrawRunning = false;
+    private boolean rawDrawing = false;
+
     Paint penPaint;
     Paint eraserPaint;
     private final float STROKE_WIDTH = 4.0f;
     private boolean needsSave = false;
     private long lastDraw = 0;
-    private long refreshInterval = 1000;
+    private final long refreshInterval = 1000;
     private RawInputCallback rawInputCallback;
     private String DayofMonth;
     private List<Rect> limitRectList = new ArrayList<>();
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private GlobalDeviceReceiver deviceReceiver = new GlobalDeviceReceiver();
-    private RxManager rxManager;
     private String filepath = "DailyNotes";
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -142,7 +145,6 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         clear_all.setOnClickListener(this);
         Button open_diary = (Button) view.findViewById(R.id.opendiary);
         open_diary.setOnClickListener(this);
-
         Button clear_tasks = (Button) view.findViewById(R.id.clear_tasks);
         clear_tasks.setOnClickListener(this);
 
@@ -575,7 +577,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         }
     }
 
-    public void drawToBitmap(Bitmap bitmap, SurfaceView surfaceView, int background) {
+    public void drawToBitmap(Bitmap bitmap, SurfaceView surfaceView, int background, List<TouchPoint> list) {
 
         Canvas canvas = new Canvas(bitmap);
         Rect limit = new Rect();
@@ -583,9 +585,9 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         surfaceView.getGlobalVisibleRect(limit,offset);
 
         Path path = new Path();
-
-        for (TouchPointList pointList : pointLists) {
-            List<TouchPoint> list = pointList.getRenderPoints();
+//
+//        for (TouchPointList pointList : pointLists) {
+//            List<TouchPoint> list = pointList.getRenderPoints();
 
 
             PointF prePoint = new PointF(list.get(0).x, list.get(0).y);
@@ -595,13 +597,13 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                 prePoint.x = point.x;
                 prePoint.y = point.y;
             }
-        }
+//        }
 
         canvas.drawPath(path, penPaint);
 
-        Drawable drawable = ResourcesCompat.getDrawable(getResources(), background, null);
-        drawable.setBounds(0, 0,surfaceView.getWidth(), surfaceView.getHeight());
-        drawable.draw(canvas);
+//        Drawable drawable = ResourcesCompat.getDrawable(getResources(), background, null);
+//        drawable.setBounds(0, 0,surfaceView.getWidth(), surfaceView.getHeight());
+//        drawable.draw(canvas);
 
     }
 
@@ -642,8 +644,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                 @Override
                 public void onEndRawDrawing(boolean b, TouchPoint touchPoint) {
                     Log.d(TAG, "onEndRawDrawing");
-                    touchHelper.setRawDrawingEnabled(false);
-                    touchHelper.setRawDrawingEnabled(true);
+
                     lastDraw = currentTimeMillis();
                     if (!redrawRunning) {
                         redrawRunning = true;
@@ -653,13 +654,12 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                                 while (currentTime < lastDraw + refreshInterval) {
                                     currentTime = currentTimeMillis();
                                 }
+                                touchHelper.setRawDrawingEnabled(false);
+                                touchHelper.setRawDrawingEnabled(true);
                                 Log.d(TAG, "thread: redrawing");
-                                drawToBitmap(tasksBitmap,binding.taskssurfaceview, R.drawable.lines);
-                                drawToBitmap(summaryBitmap,binding.summarysurfaceview, R.drawable.finelines);
-                                pointLists.clear();
-
-                                redrawSurface(tasksBitmap, binding.taskssurfaceview);
-                                redrawSurface(summaryBitmap, binding.summarysurfaceview);
+//
+//                                redrawSurface(tasksBitmap, binding.taskssurfaceview);
+//                                redrawSurface(summaryBitmap, binding.summarysurfaceview);
 
                                 redrawRunning = false;
 
@@ -677,12 +677,15 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
                 @Override
                 public void onRawDrawingTouchPointListReceived(TouchPointList touchPointList) {
-                    pointLists.add(touchPointList);
+                    drawToBitmap(tasksBitmap,binding.taskssurfaceview, R.drawable.lines,touchPointList.getPoints());
+                    drawToBitmap(summaryBitmap,binding.summarysurfaceview, R.drawable.finelines,touchPointList.getPoints());
+
 
                 }
 
                 @Override
                 public void onBeginRawErasing(boolean b, TouchPoint touchPoint) {
+
                     points.clear();
                     redrawSurface(tasksBitmap, binding.taskssurfaceview);
                     redrawSurface(summaryBitmap, binding.summarysurfaceview);
@@ -697,7 +700,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                 @Override
                 public void onRawErasingTouchPointMoveReceived(TouchPoint touchPoint) {
                     points.add(touchPoint);
-                    if (points.size() >= 100) {
+                    if (points.size() >= 50) {
                         List<TouchPoint> pointList = new ArrayList<>(points);
                         points.clear();
                         TouchPointList touchPointList = new TouchPointList();
@@ -706,7 +709,8 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                         }
                         eraseBitmap(tasksBitmap,binding.taskssurfaceview, R.drawable.lines, touchPointList.getPoints());
                         eraseBitmap(summaryBitmap,binding.summarysurfaceview, R.drawable.finelines, touchPointList.getPoints());
-
+                        redrawSurface(tasksBitmap, binding.taskssurfaceview);
+                        redrawSurface(summaryBitmap, binding.summarysurfaceview);
                     }
 
                 }
@@ -716,11 +720,39 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                     Log.d(TAG, "onRawErasingTouchPointListReceived");
                     eraseBitmap(tasksBitmap,binding.taskssurfaceview, R.drawable.lines, touchPointList.getPoints());
                     eraseBitmap(summaryBitmap,binding.summarysurfaceview, R.drawable.finelines, touchPointList.getPoints());
+                    redrawSurface(tasksBitmap, binding.taskssurfaceview);
+                    redrawSurface(summaryBitmap, binding.summarysurfaceview);
+                }
 
+                @Override
+                public void onPenUpRefresh(RectF refreshRect) {
+                    Log.d(TAG, "onPenUpRefresh " + rawDrawing);
+//            // this on and off seems to be important for stopping the thread - but also may cause the writing pause
+//            if (!rawDrawing) {
+//                touchHelper.setRawDrawingEnabled(false);
+//                touchHelper.setRawDrawingEnabled(true);
+//            }
+//            touchHelper.
+//
+                    getRxManager().enqueue(new PartialRefreshRequest(MainActivity.this, binding.taskssurfaceview, refreshRect)
+                                    .setBitmap(tasksBitmap),
+                            new RxCallback<PartialRefreshRequest>() {
+                                @Override
+                                public void onNext(@NonNull PartialRefreshRequest partialRefreshRequest) {
+                                }
+                            });
                 }
             };
         }
         return rawInputCallback;
+    }
+
+    private RxManager getRxManager() {
+        if (rxManager == null) {
+            RxManager.Builder.initAppContext(this);
+            rxManager = RxManager.Builder.sharedSingleThreadManager();
+        }
+        return rxManager;
     }
 
 }
