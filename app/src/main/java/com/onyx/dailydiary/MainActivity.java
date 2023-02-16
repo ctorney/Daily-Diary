@@ -15,9 +15,12 @@ import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.DownloadManager;
 import android.app.FragmentManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -100,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     private String DayofMonth;
     private List<Rect> limitRectList = new ArrayList<>();
     private static final String TAG = MainActivity.class.getSimpleName();
-
+    private iCalParser parser;
     private GlobalDeviceReceiver deviceReceiver = new GlobalDeviceReceiver();
     private String filepath = "DailyNotes";
     @Override
@@ -119,7 +122,6 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d");
         DayofMonth = selectedDate.format(formatter);
 
-        setMonthView();
         touchHelper = TouchHelper.create(getWindow().getDecorView().getRootView(), getRawInputCallback());
         touchHelper.debugLog(false);
         touchHelper.setRawInputReaderEnable(true);
@@ -147,9 +149,21 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         open_diary.setOnClickListener(this);
         Button clear_tasks = (Button) view.findViewById(R.id.clear_tasks);
         clear_tasks.setOnClickListener(this);
+        parser = new iCalParser(getApplicationContext());
+        registerReceiver(onCompleteDownload,
+                new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+
+        setMonthView();
+
 
     }
-
+    BroadcastReceiver onCompleteDownload=new BroadcastReceiver() {
+        public void onReceive(Context ctxt, Intent intent) {
+            Toast.makeText(MainActivity.this, "PARSING",
+                    Toast.LENGTH_LONG).show();
+            parser.parse_file();
+        }
+    };
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -263,6 +277,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_reload:
+                parser.sync_calendars();
                 Toast.makeText(this, "Calendar sync is not yet implemented.", Toast.LENGTH_SHORT)
                         .show();
                 break;
@@ -412,7 +427,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     {
         monthText.setText(monthFromDate(selectedDate));
         ArrayList<String> daysInMonth = daysInMonthArray(selectedDate);
-        CalendarAdapter calendarAdapter = new CalendarAdapter(daysInMonth, selectedDate, this);
+        CalendarAdapter calendarAdapter = new CalendarAdapter(parser, daysInMonth, selectedDate, this);
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(), 7);
         calendarRecyclerView.setLayoutManager(layoutManager);
         calendarRecyclerView.setAdapter(calendarAdapter);
