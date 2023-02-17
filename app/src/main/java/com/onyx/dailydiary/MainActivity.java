@@ -257,10 +257,15 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
             if (lastHolder!=null){
                 lastHolder.layout.setBackgroundColor(Color.WHITE);
+                lastHolder.headerlayout.setBackgroundColor(Color.WHITE);
+                lastHolder.eventsText.setTextColor(Color.BLACK);
                 lastHolder.dayOfMonth.setTextColor(Color.BLACK);
             }
             holder.layout.setBackgroundColor(Color.DKGRAY);
             holder.dayOfMonth.setTextColor(Color.WHITE);
+            holder.eventsText.setTextColor(Color.WHITE);
+            holder.headerlayout.setBackgroundColor(Color.DKGRAY);
+
             lastHolder = holder;
 
         }
@@ -283,7 +288,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
                 break;
             case R.id.action_settings:
                 // opening a new intent to open settings activity.
-                Intent i = new Intent(MainActivity.this, SettingsActivity.class);
+                Intent i = new Intent(MainActivity.this, Calendars.class);
                 startActivity(i);
 
                 break;
