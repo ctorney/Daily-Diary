@@ -15,22 +15,22 @@ public class SettingsActivity extends AppCompatActivity {
 
         // below line is to change
         // the title of our action bar.
-        getSupportActionBar().setTitle("Settings");
+        getSupportActionBar().setTitle("Calendars");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         // below line is used to check if
         // frame layout is empty or not.
-        if (findViewById(R.id.idFrameLayout) != null) {
-            if (savedInstanceState != null) {
-                return;
-            }
-            // below line is to inflate our fragment.
-
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.idFrameLayout, new SettingsFragment())
-                    .commit();
-
-        }
+//        if (findViewById(R.id.idFrameLayout) != null) {
+//            if (savedInstanceState != null) {
+//                return;
+//            }
+//            // below line is to inflate our fragment.
+//
+//            getSupportFragmentManager()
+//                    .beginTransaction()
+//                    .replace(R.id.idFrameLayout, new SettingsFragment())
+//                    .commit();
+//
+//        }
     }
 
     @Override
