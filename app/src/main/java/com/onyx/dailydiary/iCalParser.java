@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class iCalParser {
-    private static final String icsurl = "https://outlook.office365.com/owa/calendar/b31a3be9550740d2bf5879823966be05@glasgow.ac.uk/2341bb6761e647058d8cb7a1a2fd4db417272045294428868729/calendar.ics";
+    private static final String icsurl = "";
     private static final String icsfilename = "calendar.ics";
     private String filepath = "DailyNotes";
 
