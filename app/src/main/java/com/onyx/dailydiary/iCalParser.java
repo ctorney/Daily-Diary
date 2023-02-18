@@ -219,6 +219,7 @@ public class iCalParser {
                 }
                 catch (Exception e) {
                     Log.d(TAG, e.getMessage());
+
                 }
             }
 
