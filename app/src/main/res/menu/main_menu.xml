@@ -2,10 +2,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/action_reload"
-        android:title="Sync calendars" />
+        android:title="@string/sync_calendars" />
 
-    <item android:id="@+id/action_settings"
-        android:title="@string/action_settings"
+    <item android:id="@+id/edit_calendars"
+        android:title="@string/edit_calendars"
         app:showAsAction="never"/>
 
 </menu>

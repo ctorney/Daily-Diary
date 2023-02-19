@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">Daily Diary</string>
     <string name="action_settings">My calendars</string>
+    <string name="edit_calendars">Edit calendars</string>
+    <string name="sync_calendars">Sync calendars</string>
+
     <string name="Sunday">SUN</string>
     <string name="Monday">MON</string>
     <string name="Tuesday">TUE</string>

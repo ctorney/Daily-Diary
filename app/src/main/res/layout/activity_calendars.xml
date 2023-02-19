@@ -7,7 +7,7 @@
         android:id="@+id/activity_writer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".WriterActivity">
+        tools:context=".writer.WriterActivity">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -42,30 +42,149 @@
                 android:paddingLeft="10dp"
                 android:textColor="@color/white"
                 android:textSize="22sp"
-                android:text="Calendars" />
+                android:text="Edit calendars" />
 
 
 
 
 
-            <ImageButton
-                android:id="@+id/addpage"
-                android:background="@color/black"
+
+
+
+
+
+        </LinearLayout>
+
+
+<!--            <TextView-->
+<!--                android:id="@+id/calendar_add_title"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:background="@color/black"-->
+<!--                android:layout_gravity="center_vertical|left"-->
+<!--                android:paddingLeft="20dp"-->
+<!--                android:paddingTop="5dp"-->
+<!--                android:paddingBottom="5dp"-->
+<!--                android:textColor="@color/white"-->
+<!--                android:textSize="22sp"-->
+<!--                android:text="Add a new calendar" />-->
+
+        <LinearLayout
+            android:id="@+id/ical_input_layout_function"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            android:paddingTop="50dp"
+            android:paddingBottom="30dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/aical_input_layout_function"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:paddingTop="0dp"
+                android:paddingBottom="20dp"
+                android:paddingLeft="0dp"
+                android:paddingRight="0dp"
+                android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/calendar_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:layout_gravity="center_vertical|left"
+                android:paddingLeft="0dp"
+                android:padding="2dp"
+                android:textColor="@color/black"
+                android:textSize="22sp"
+                android:text="Calendar name: " />
+
+            <EditText
+                android:id="@+id/name_text_input"
+                android:layout_height="40dp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:paddingRight="20dp"
+                android:paddingLeft="20dp"
+                android:layout_gravity="center_vertical"
+                android:background="@color/light_gray"
+                android:textSize="22sp"
+                android:textColor="@color/black"
+                android:inputType="text"/>
+
+            <TextView
+                android:id="@+id/calendar_url"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:layout_gravity="center_vertical|left"
+                android:paddingLeft="10dp"
+                android:padding="2dp"
+                android:textColor="@color/black"
+                android:textSize="22sp"
+                android:text=" iCal URL: " />
+
+            <EditText
+                android:id="@+id/url_text_input"
+                android:layout_height="40dp"
+                android:layout_width="0dp"
+                android:background="@color/light_gray"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="2"
+                android:paddingRight="20dp"
+                android:paddingLeft="20dp"
+                android:textSize="22sp"
+                android:textColor="@color/black"
+                android:inputType="textUri"/>
+
+<!--            <Button-->
+<!--                android:id="@+id/addpage"-->
+<!--                android:background="@color/white"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="35dp"-->
+<!--                android:paddingLeft="0dp"-->
+<!--                android:paddingRight="0dp"-->
+<!--                android:paddingTop="-100dp"-->
+<!--                android:paddingBottom="0dp"-->
+<!--                android:textSize="32sp"-->
+<!--                android:text="+"-->
+<!--                android:layout_gravity="center_vertical|end"-->
+<!--                />-->
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/cal_add_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/black"
                 android:layout_gravity="center_vertical|end"
                 app:srcCompat="@drawable/addpage" />
+        </LinearLayout>
+            <TextView
+                android:id="@+id/calendar_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/black"
+                android:layout_gravity="center_vertical|left"
+                android:textColor="@color/white"
+                android:paddingLeft="20dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:textSize="22sp"
+                android:text="Existing calendars " />
 
 
-
-
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/calendarICSRecyclerView"
+                android:paddingTop="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
         </LinearLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/calendarICSRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-        </LinearLayout>
 
 
     </RelativeLayout>

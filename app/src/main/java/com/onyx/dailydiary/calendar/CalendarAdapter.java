@@ -1,7 +1,6 @@
-package com.onyx.dailydiary;
+package com.onyx.dailydiary.calendar;
 
 
-import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,13 +10,14 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.fasterxml.jackson.core.util.InternCache;
+import com.onyx.dailydiary.R;
+import com.onyx.dailydiary.ical.iCalParser;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-class CalendarAdapter extends RecyclerView.Adapter<CalendarViewHolder>
+public class CalendarAdapter extends RecyclerView.Adapter<CalendarViewHolder>
 {
     private final ArrayList<String> daysOfMonth;
     private final OnItemListener onItemListener;

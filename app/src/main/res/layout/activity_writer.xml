@@ -7,7 +7,7 @@
     android:id="@+id/activity_writer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".WriterActivity">
+    tools:context=".writer.WriterActivity">
 
     <LinearLayout
         android:id="@+id/layout_function"

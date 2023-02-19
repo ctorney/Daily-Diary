@@ -5,23 +5,15 @@ import static java.lang.System.currentTimeMillis;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
-import androidx.core.view.GestureDetectorCompat;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.DownloadManager;
-import android.app.FragmentManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -33,16 +25,12 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.graphics.pdf.PdfDocument;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -54,17 +42,12 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.appcompat.widget.Toolbar;
-
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 import com.onyx.android.sdk.api.device.epd.EpdController;
 import com.onyx.android.sdk.api.device.epd.UpdateMode;
 import com.onyx.android.sdk.data.note.TouchPoint;
@@ -73,7 +56,14 @@ import com.onyx.android.sdk.pen.TouchHelper;
 import com.onyx.android.sdk.pen.data.TouchPointList;
 import com.onyx.android.sdk.rx.RxCallback;
 import com.onyx.android.sdk.rx.RxManager;
+import com.onyx.dailydiary.calendar.CalendarAdapter;
+import com.onyx.dailydiary.calendar.CalendarViewHolder;
 import com.onyx.dailydiary.databinding.ActivityMainBinding;
+import com.onyx.dailydiary.ical.CalendarActivity;
+import com.onyx.dailydiary.ical.iCalParser;
+import com.onyx.dailydiary.utils.GlobalDeviceReceiver;
+import com.onyx.dailydiary.utils.PartialRefreshRequest;
+import com.onyx.dailydiary.writer.WriterActivity;
 
 public class MainActivity extends AppCompatActivity implements CalendarAdapter.OnItemListener, View.OnClickListener
 {
@@ -159,9 +149,9 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
     }
     BroadcastReceiver onCompleteDownload=new BroadcastReceiver() {
         public void onReceive(Context ctxt, Intent intent) {
-            Toast.makeText(MainActivity.this, "PARSING",
-                    Toast.LENGTH_LONG).show();
-            parser.parse_file();
+            parser.loadCalendars();
+            setMonthView();
+
         }
     };
     @Override
@@ -196,7 +186,8 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
         Log.d(TAG, "onResume");
         super.onResume();
-        View view = binding.getRoot();
+        parser.loadCalendars();
+
         EpdController.repaintEveryThing(UpdateMode.DU_QUALITY);
         Runnable thread = new Runnable()
         {
@@ -283,14 +274,12 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         switch (item.getItemId()) {
             case R.id.action_reload:
                 parser.sync_calendars();
-                Toast.makeText(this, "Calendar sync is not yet implemented.", Toast.LENGTH_SHORT)
-                        .show();
-                break;
-            case R.id.action_settings:
-                // opening a new intent to open settings activity.
-                Intent i = new Intent(MainActivity.this, Calendars.class);
-                startActivity(i);
 
+                break;
+            case R.id.edit_calendars:
+                // opening a new intent to open calendar settings activity.
+                Intent i = new Intent(MainActivity.this, CalendarActivity.class);
+                startActivity(i);
                 break;
             default:
                 break;
@@ -430,6 +419,8 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
     private void setMonthView()
     {
+        Log.d(TAG, "setMonthView");
+
         monthText.setText(monthFromDate(selectedDate));
         ArrayList<String> daysInMonth = daysInMonthArray(selectedDate);
         CalendarAdapter calendarAdapter = new CalendarAdapter(parser, daysInMonth, selectedDate, this);

@@ -1,10 +1,10 @@
-package com.onyx.dailydiary;
+package com.onyx.dailydiary.utils;
 
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 
-class GestureListener extends GestureDetector.SimpleOnGestureListener {
+public class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
     public static final int SWIPE_VELOCITY_THRESHOLD = 1000;
     public static final int SWIPE_THRESHOLD = 400;

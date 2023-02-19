@@ -1,4 +1,4 @@
-package com.onyx.dailydiary;
+package com.onyx.dailydiary.calendar;
 
 import android.view.View;
 import android.widget.ImageView;
@@ -7,6 +7,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.onyx.dailydiary.R;
 
 
 public class CalendarViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener

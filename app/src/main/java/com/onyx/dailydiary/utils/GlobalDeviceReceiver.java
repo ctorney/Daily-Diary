@@ -1,4 +1,4 @@
-package com.onyx.dailydiary;
+package com.onyx.dailydiary.utils;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

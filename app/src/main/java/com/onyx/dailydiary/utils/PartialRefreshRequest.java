@@ -1,4 +1,4 @@
-package com.onyx.dailydiary;
+package com.onyx.dailydiary.utils;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
