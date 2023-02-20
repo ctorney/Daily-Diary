@@ -134,7 +134,8 @@ public class CalendarActivity extends AppCompatActivity implements iCalAdapter.O
     public void onClick(View view) {
         switch(view.getId()) {
             case R.id.back_button:
-                onBackPressed();
+//                onBackPressed();
+                finish();
                 break;
             case R.id.cal_add_button:
                 addCaltoList();
@@ -185,7 +186,7 @@ public class CalendarActivity extends AppCompatActivity implements iCalAdapter.O
         calendarList.get(i).add(String.valueOf(cal_name.getText()).replace(",",""));
         calendarList.get(i).add(String.valueOf(cal_url.getText()).replace(",",""));
         calendarList.get(i).add(randomFileName());
-        mAdapter.notifyItemInserted(calendarList.size() +1);
+        mAdapter.notifyItemInserted(calendarList.size() );
 
         cal_name.setText("");
         cal_url.setText("");

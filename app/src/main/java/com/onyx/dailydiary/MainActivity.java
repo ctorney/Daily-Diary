@@ -433,7 +433,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
             {
                 while (calendarAdapter.todayHolder==null)
                 {
-                    Log.d(TAG, "waiting on a holder");
+//                    Log.d(TAG, "waiting on a holder");
 
                 }
                 lastHolder = calendarAdapter.todayHolder;

@@ -68,7 +68,6 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarViewHolder>
 //                Log.d(TAG, tempstring);
                 eventList = eventList + tempstring + "\n";
             }
-            Log.d(TAG, eventList);
             holder.eventsText.setText(eventList);
         }
 

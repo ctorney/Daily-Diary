@@ -218,6 +218,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
             touchHelper.enableFingerTouch(true);
             touchHelper.setRawDrawingRenderEnabled(true);
             touchHelper.setRawInputReaderEnable(true);
+            touchHelper.setPostInputEvent(true);
 
         };
 
@@ -493,6 +494,8 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
         @Override
         public void onBeginRawDrawing(boolean b, TouchPoint touchPoint) {
+            Log.d(TAG, "onBeginRawDrawing");
+
             disableFingerTouch(getApplicationContext());
             points.clear();
             rawDrawing = true;
@@ -500,6 +503,8 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
         @Override
         public void onEndRawDrawing(boolean b, TouchPoint touchPoint) {
+            Log.d(TAG, "onEndRawDrawing");
+
             rawDrawing = false;
             enableFingerTouch(getApplicationContext());
 
@@ -541,6 +546,8 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
         @Override
         public void onBeginRawErasing(boolean b, TouchPoint touchPoint) {
+            Log.d(TAG, "onBeginRawErasing");
+
             points.clear();
             disableFingerTouch(getApplicationContext());
             rawDrawing = true;
@@ -549,6 +556,8 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
         @Override
         public void onEndRawErasing(boolean b, TouchPoint touchPoint) {
+            Log.d(TAG, "onEndRawErasing");
+
             points.add(touchPoint);
             List<TouchPoint> pointList = new ArrayList<>(points);
             points.clear();

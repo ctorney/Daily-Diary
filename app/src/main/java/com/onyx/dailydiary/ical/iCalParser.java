@@ -1,5 +1,8 @@
 package com.onyx.dailydiary.ical;
 
+import static android.app.DownloadManager.Request.VISIBILITY_HIDDEN;
+import static android.app.DownloadManager.Request.VISIBILITY_VISIBLE;
+
 import android.app.DownloadManager;
 import android.content.Context;
 import android.net.Uri;
@@ -79,6 +82,7 @@ public class iCalParser {
 
                 while(line != null){
                     String[] splitLine = line.split(",");
+                    Log.d(TAG, String.valueOf(splitLine));
 
                     if (splitLine.length==3){
                         ArrayList<String> calendarLine = new ArrayList<>(3);
@@ -103,8 +107,10 @@ public class iCalParser {
         loadCalendarList();
 
         for (int i = 0; i < calendarList.size(); i++) {
+            String icsname = calendarList.get(i).get(0);
 
             String icsfilename = calendarList.get(i).get(2);
+            Log.d(TAG, "Loading " + icsname);
 
             try {
 
@@ -126,8 +132,11 @@ public class iCalParser {
     public List<String> get_day_events(LocalDate inputDate){
 
         List<String> eventList = new ArrayList<>();
-
+        int i = 1;
         for (Calendar calendar : iCalCalendars) {
+            Log.d(TAG, "Loading events " + i);
+            i++;
+
             try {
                 DateTime selectedDate = new DateTime(Date.from(inputDate.atStartOfDay().plusSeconds(1).atZone(ZoneId.systemDefault()).toInstant()));
 
@@ -183,23 +192,39 @@ public class iCalParser {
             String icsfilename = calendarList.get(i).get(2);
             String icsurl = calendarList.get(i).get(1);
             String icsname = calendarList.get(i).get(0);
+//            Log.d(TAG, "calendar sync " + icsname);
 
 
             try {
-
+//                icsurl = "https://www.maths.gla.ac.uk/iCal/s/1/calendar.ics";
+//                icsurl = "https://moodle.gla.ac.uk/calendar/export_execute.php?userid=80983&authtoken=59416297c2bacdcc6fddf0912f6832c7e01cb264&preset_what=all&preset_time=custom";
                 DownloadManager downloadmanager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
                 Uri uri = Uri.parse(icsurl);
+//                Log.d(TAG, "calendar sync " + icsurl);
+//                Log.d(TAG, "calendar sync " + icsfilename);
+
 
                 DownloadManager.Request request = new DownloadManager.Request(uri);
+//                request.setNotificationVisibility(VISIBILITY_HIDDEN);
                 request.setTitle(icsname);
                 request.setDescription("Downloading");
+//                request.setNotificationVisibility(VISIBILITY_VISIBLE);
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
                 request.setDestinationInExternalFilesDir(context, filepath, icsfilename);
+                File calendarFile = new File(context.getExternalFilesDir(filepath), icsfilename);
+
+
+                if (calendarFile.exists()) {
+                    calendarFile.delete();
+                }
+
                 downloadmanager.enqueue(request);
 
             } catch (Exception e) {
                 Toast.makeText(context, "Unable to download calendar " + icsname + ". Check url or internet connection.",
                         Toast.LENGTH_LONG).show();
+                Log.d(TAG, e.getMessage());
+
             }
         }
     }
