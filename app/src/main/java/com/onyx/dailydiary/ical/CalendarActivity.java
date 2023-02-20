@@ -157,7 +157,7 @@ public class CalendarActivity extends AppCompatActivity implements iCalAdapter.O
 
     @Override
     public void onDestroy(){
-        super.onDestroy();
+
 
         Log.d(TAG, "onDestroy");
         File calendarFile = new File(getExternalFilesDir(filepath), filename);
@@ -170,11 +170,11 @@ public class CalendarActivity extends AppCompatActivity implements iCalAdapter.O
                 writer.write(calendarList.get(i).get(2) + "\n");
             }
             writer.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (IOException ignored) {
+
         }
 
-
+        super.onDestroy();
 
 
 

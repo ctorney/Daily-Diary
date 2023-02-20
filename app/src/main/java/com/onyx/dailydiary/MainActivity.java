@@ -104,11 +104,11 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         deviceReceiver.enable(this, true);
         View view = binding.getRoot();
         setContentView(view);
+
+        selectedDate = LocalDate.now();
         initWidgets();
         initReceiver();
         initPaint();
-        selectedDate = LocalDate.now();
-
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d");
         DayofMonth = selectedDate.format(formatter);
 
@@ -133,6 +133,8 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         initSurfaceView(binding.taskssurfaceview);
         initSurfaceView(binding.summarysurfaceview);
 
+
+
         Button clear_all = (Button) view.findViewById(R.id.clearsummary);
         clear_all.setOnClickListener(this);
         Button open_diary = (Button) view.findViewById(R.id.opendiary);
@@ -145,6 +147,7 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
 
         setMonthView();
 
+        parser.sync_calendars();
 
     }
     BroadcastReceiver onCompleteDownload=new BroadcastReceiver() {

@@ -13,6 +13,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 //import net.fortuna.ical4j.filter.ComponentFilter;
+import net.fortuna.ical4j.data.CalendarOutputter;
+import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.filter.Filter;
 //import net.fortuna.ical4j.filter.FilterExpression;
 import net.fortuna.ical4j.filter.PeriodRule;
@@ -20,6 +22,7 @@ import net.fortuna.ical4j.filter.PeriodRule;
 //import net.fortuna.ical4j.filter.predicate.PeriodRule;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
+import net.fortuna.ical4j.model.ComponentList;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Period;
@@ -31,8 +34,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -132,10 +138,7 @@ public class iCalParser {
     public List<String> get_day_events(LocalDate inputDate){
 
         List<String> eventList = new ArrayList<>();
-        int i = 1;
         for (Calendar calendar : iCalCalendars) {
-            Log.d(TAG, "Loading events " + i);
-            i++;
 
             try {
                 DateTime selectedDate = new DateTime(Date.from(inputDate.atStartOfDay().plusSeconds(1).atZone(ZoneId.systemDefault()).toInstant()));
@@ -159,7 +162,7 @@ public class iCalParser {
                         String eventTimeStr = event.getProperty("DtStart").getValue();
 
                         if (eventTimeStr.length() > 8) {
-                            eventTime = LocalDateTime.parse(eventTimeStr, fullformatter);
+                            eventTime = LocalDateTime.parse(eventTimeStr.substring(0,15), fullformatter);
                             if ((eventTime.getHour() + eventTime.getMinute()) != 0) {
                                 String formattedTime = eventTime.format(timeFormatter);
                                 summary = formattedTime + " " + summary;
@@ -195,37 +198,60 @@ public class iCalParser {
 //            Log.d(TAG, "calendar sync " + icsname);
 
 
-            try {
-//                icsurl = "https://www.maths.gla.ac.uk/iCal/s/1/calendar.ics";
-//                icsurl = "https://moodle.gla.ac.uk/calendar/export_execute.php?userid=80983&authtoken=59416297c2bacdcc6fddf0912f6832c7e01cb264&preset_what=all&preset_time=custom";
-                DownloadManager downloadmanager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
-                Uri uri = Uri.parse(icsurl);
-//                Log.d(TAG, "calendar sync " + icsurl);
-//                Log.d(TAG, "calendar sync " + icsfilename);
 
 
-                DownloadManager.Request request = new DownloadManager.Request(uri);
-//                request.setNotificationVisibility(VISIBILITY_HIDDEN);
-                request.setTitle(icsname);
-                request.setDescription("Downloading");
-//                request.setNotificationVisibility(VISIBILITY_VISIBLE);
-                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                request.setDestinationInExternalFilesDir(context, filepath, icsfilename);
-                File calendarFile = new File(context.getExternalFilesDir(filepath), icsfilename);
+            Runnable thread = () -> {
+                try {
+                    InputStream input = new URL(icsurl).openStream();
+
+                    CalendarBuilder builder = new CalendarBuilder();
+                    Calendar calendar = builder.build(input);
 
 
-                if (calendarFile.exists()) {
-                    calendarFile.delete();
+                    File calendarFile = new File(context.getExternalFilesDir(filepath), icsfilename);
+
+                    FileOutputStream fout = new FileOutputStream(calendarFile);
+
+                    CalendarOutputter outputter = new CalendarOutputter();
+                    outputter.setValidating(false);
+                    outputter.output(calendar, fout);
+                    fout.close();
+
+                } catch (Exception e) {
+                    Log.d(TAG, e.getMessage());
+
                 }
+            };
+            new Thread(thread).start();
 
-                downloadmanager.enqueue(request);
 
-            } catch (Exception e) {
-                Toast.makeText(context, "Unable to download calendar " + icsname + ". Check url or internet connection.",
-                        Toast.LENGTH_LONG).show();
-                Log.d(TAG, e.getMessage());
 
-            }
+
+
+
+//                DownloadManager downloadmanager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
+//                Uri uri = Uri.parse(icsurl);
+////                Log.d(TAG, "calendar sync " + icsurl);
+////                Log.d(TAG, "calendar sync " + icsfilename);
+//
+//
+//                DownloadManager.Request request = new DownloadManager.Request(uri);
+////                request.setNotificationVisibility(VISIBILITY_HIDDEN);
+//                request.setTitle(icsname);
+//                request.setDescription("Downloading");
+////                request.setNotificationVisibility(VISIBILITY_VISIBLE);
+//                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+//                request.setDestinationInExternalFilesDir(context, filepath, icsfilename);
+////                File calendarFile = new File(context.getExternalFilesDir(filepath), icsfilename);
+////
+////
+////                if (calendarFile.exists()) {
+////                    calendarFile.delete();
+////                }
+//
+//                downloadmanager.enqueue(request);
+
+
         }
     }
 }
