@@ -88,7 +88,7 @@
 
     </LinearLayout>
 
-    <SurfaceView
+    <com.onyx.dailydiary.utils.BitmapView
         android:id="@+id/writerview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

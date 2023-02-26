@@ -237,7 +237,7 @@
 
                             </LinearLayout>
 
-                            <SurfaceView
+                            <com.onyx.dailydiary.utils.BitmapView
                                 android:id="@+id/taskssurfaceview"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
@@ -307,7 +307,7 @@
 
                             </LinearLayout>
 
-                            <SurfaceView
+                            <com.onyx.dailydiary.utils.BitmapView
                                 android:id="@+id/summarysurfaceview"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"

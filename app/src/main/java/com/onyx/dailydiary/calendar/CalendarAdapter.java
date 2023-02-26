@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.onyx.dailydiary.MainActivity;
 import com.onyx.dailydiary.R;
 import com.onyx.dailydiary.ical.iCalParser;
 
@@ -23,18 +24,20 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarViewHolder>
     private final OnItemListener onItemListener;
     private iCalParser parser;
     public CalendarViewHolder todayHolder = null;
+    public MainActivity.HolderListener HolderListener = null;
+
     private final LocalDate selectedDate;
     private final LocalDate currentDate;
     private static final String TAG = CalendarAdapter.class.getSimpleName();
 
-    public CalendarAdapter(iCalParser parser, ArrayList<String> daysOfMonth, LocalDate selectedDate, OnItemListener onItemListener)
+    public CalendarAdapter(iCalParser parser, ArrayList<String> daysOfMonth, LocalDate selectedDate, OnItemListener onItemListener, MainActivity.HolderListener HolderListener)
     {
         this.daysOfMonth = daysOfMonth;
         this.onItemListener = onItemListener;
         this.selectedDate = selectedDate;
         this.currentDate = LocalDate.now();
         this.parser = parser;
-
+        this.HolderListener = HolderListener;
 
     }
 
@@ -81,6 +84,7 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarViewHolder>
                 if (currentDate.getDayOfMonth()== Integer.valueOf(daysOfMonth.get(position))) {
                     holder.currentDay.setImageResource(R.drawable.filled_circle);
                     todayHolder = holder;
+                    this.HolderListener.onTodayHolderCreated(todayHolder);
                 }
             }
             catch (Exception e)

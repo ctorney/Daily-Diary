@@ -14,6 +14,9 @@ public class GlobalDeviceReceiver extends BroadcastReceiver {
     public static final String SYSTEM_UI_DIALOG_OPEN_ACTION = DeviceReceiver.SYSTEM_UI_DIALOG_OPEN_ACTION;
     public static final String SYSTEM_UI_DIALOG_CLOSE_ACTION = DeviceReceiver.SYSTEM_UI_DIALOG_CLOSE_ACTION;
     public static final String SYSTEM_SCREEN_ON_ACTION = Intent.ACTION_SCREEN_ON;
+
+    public static final String SYSTEM_SCREEN_OFF_ACTION = Intent.ACTION_SCREEN_OFF;
+
     public static final String DIALOG_TYPE_NOTIFICATION_PANEL = DeviceReceiver.DIALOG_TYPE_NOTIFICATION_PANEL;
     public static final String DIALOG_TYPE = DeviceReceiver.DIALOG_TYPE;
 
@@ -26,6 +29,9 @@ public class GlobalDeviceReceiver extends BroadcastReceiver {
 
     public interface SystemScreenOnListener {
         void onScreenOn();
+
+        void onScreenOff();
+
     }
 
     public GlobalDeviceReceiver setSystemNotificationPanelChangeListener(SystemNotificationPanelChangeListener listener) {
@@ -80,6 +86,12 @@ public class GlobalDeviceReceiver extends BroadcastReceiver {
         }
     }
 
+    private void handSystemScreenOffAction() {
+        if (systemScreenOnListener != null) {
+            systemScreenOnListener.onScreenOff();
+        }
+    }
+
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
@@ -91,6 +103,9 @@ public class GlobalDeviceReceiver extends BroadcastReceiver {
             handleSystemUIDialogAction(intent);
         } else if (StringUtils.safelyEquals(action, SYSTEM_SCREEN_ON_ACTION)) {
             handSystemScreenOnAction();
+
+        } else if (StringUtils.safelyEquals(action, SYSTEM_SCREEN_OFF_ACTION)) {
+            handSystemScreenOffAction();
         }
     }
 }

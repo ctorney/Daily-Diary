@@ -190,18 +190,20 @@ public class iCalParser {
 
         loadCalendarList();
         Toast.makeText(context, "downloading calendars..", Toast.LENGTH_LONG).show();
-        for (int i = 0; i < calendarList.size(); i++) {
 
-            String icsfilename = calendarList.get(i).get(2);
-            String icsurl = calendarList.get(i).get(1);
-            String icsname = calendarList.get(i).get(0);
 //            Log.d(TAG, "calendar sync " + icsname);
 
 
 
 
-            Runnable thread = () -> {
+        Runnable thread = () -> {
+            for (int i = 0; i < calendarList.size(); i++) {
+
+                String icsfilename = calendarList.get(i).get(2);
+                String icsurl = calendarList.get(i).get(1);
+                String icsname = calendarList.get(i).get(0);
                 try {
+
                     InputStream input = new URL(icsurl).openStream();
 
                     CalendarBuilder builder = new CalendarBuilder();
@@ -221,7 +223,9 @@ public class iCalParser {
                     Log.d(TAG, e.getMessage());
 
                 }
-            };
+            }
+            loadCalendars();
+        };
             new Thread(thread).start();
 
 
@@ -252,6 +256,6 @@ public class iCalParser {
 //                downloadmanager.enqueue(request);
 
 
-        }
+
     }
 }

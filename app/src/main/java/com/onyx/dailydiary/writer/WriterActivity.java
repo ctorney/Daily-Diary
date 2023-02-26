@@ -1,28 +1,20 @@
 package com.onyx.dailydiary.writer;
 
 import static java.lang.Integer.max;
-import static java.lang.System.currentTimeMillis;
 import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
 import static java.time.temporal.TemporalAdjusters.firstDayOfYear;
 import static java.time.temporal.TemporalAdjusters.lastDayOfMonth;
 import static java.time.temporal.TemporalAdjusters.lastDayOfYear;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.core.view.GestureDetectorCompat;
-import androidx.databinding.DataBindingUtil;
 
-import com.onyx.android.sdk.api.device.epd.EpdController;
 import com.onyx.android.sdk.data.note.TouchPoint;
-import com.onyx.android.sdk.pen.RawInputCallback;
 import com.onyx.android.sdk.pen.TouchHelper;
-import com.onyx.android.sdk.pen.data.TouchPointList;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -30,13 +22,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Path;
-import android.graphics.PixelFormat;
-import android.graphics.PointF;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.Bundle;
@@ -50,17 +37,16 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.onyx.android.sdk.rx.RxCallback;
 import com.onyx.android.sdk.rx.RxManager;
 import com.onyx.dailydiary.R;
 import com.onyx.dailydiary.databinding.ActivityWriterBinding;
+import com.onyx.dailydiary.utils.BitmapView;
 import com.onyx.dailydiary.utils.GestureListener;
-import com.onyx.dailydiary.utils.PartialRefreshRequest;
+import com.onyx.dailydiary.utils.PenCallback;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -80,17 +66,18 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
     private boolean rawDrawing = false;
     private String filepath = "DailyDiary";
     private String filename;
+    private List<Rect> limitRectList = new ArrayList<>();
+
     public Bitmap bitmap;
     private Paint penPaint = new Paint();
     private Paint eraserPaint = new Paint();
     private RxManager rxManager;
-    private boolean needsSave = false;
     private boolean redrawRunning = false;
     private long lastDraw = 0;
     private final long refreshInterval = 1000;
     private List<TouchPoint> points = new ArrayList<>();
     private Canvas canvas;
-
+    private PenCallback penCallback;
     String currentdatestring;
     int daypage;
     int daypageCount;
@@ -100,15 +87,22 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_writer);
         getSupportActionBar().hide();
 
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_writer);
-        touchHelper = TouchHelper.create(binding.writerview, callback);
+        binding = ActivityWriterBinding.inflate(getLayoutInflater());
+        View view = binding.getRoot();
+        setContentView(view);
+//        setContentView(R.layout.activity_writer);
 
-        // initialise surface and paints
-        initSurfaceView();
-        initPaint();
+//        binding = DataBindingUtil.setContentView(this, R.layout.activity_writer);
+
+        List<BitmapView> viewList = new ArrayList<>();
+        viewList.add(binding.writerview);
+        penCallback = new PenCallback(this,viewList,true);
+        touchHelper = TouchHelper.create(getWindow().getDecorView().getRootView(), penCallback);
+        touchHelper.debugLog(false);
+        touchHelper.setRawInputReaderEnable(true);
+        penCallback.setTouchHelper(touchHelper);
 
         // setup the gestures
         mDetector = new GestureDetectorCompat(this,new GestureListener(){
@@ -151,7 +145,9 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
         datebox = findViewById(R.id.date_text);
         datebox.setText(currentdate.format(DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy (")) + String.valueOf(daypage) + "/" + String.valueOf(daypageCount)+")");
         filename = currentdate.format(DateTimeFormatter.ofPattern("yyyyMMdd-")) + daypage + ".png";
-
+        // initialise surface and paints
+        initSurfaceView();
+//        initPaint();
 
         // setup the buttons
         ImageButton back_button = findViewById(R.id.back_button);
@@ -202,16 +198,18 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
     public void onResume() {
         Log.d(TAG, "onResume");
         super.onResume();
+        startTouchHelper();
+
         Runnable thread = () -> {
-            safeLoadBitmap();
-            redrawSurface();
-            Rect limit = new Rect();
-            binding.writerview.getLocalVisibleRect(limit);
+//            safeLoadBitmap();
+//            redrawSurface();
+//            Rect limit = new Rect();
+//            binding.writerview.getLocalVisibleRect(limit);
             touchHelper.setStrokeWidth(STROKE_WIDTH);
             touchHelper.setStrokeStyle(TouchHelper.STROKE_STYLE_MARKER);
             touchHelper.setStrokeColor(Color.BLACK);
-            touchHelper.setLimitRect(limit, new ArrayList<Rect>())
-                    .openRawDrawing();
+//            touchHelper.setLimitRect(limit, new ArrayList<Rect>())
+//                    .openRawDrawing();
             touchHelper.setRawDrawingEnabled(false);
             touchHelper.setSingleRegionMode();
             touchHelper.setRawDrawingEnabled(true);
@@ -222,7 +220,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
         };
 
-        new Thread(thread).start();
+//        new Thread(thread).start();
         return;
 
 
@@ -245,52 +243,75 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
         touchHelper.setRawDrawingEnabled(false);
         touchHelper.setRawDrawingRenderEnabled(false);
         touchHelper.closeRawDrawing();
-        saveBitmap();
+        if (penCallback.needsSave())
+            binding.writerview.saveBitmap();
 
     }
     public void onDestroy(){
         Log.d(TAG, "onDestroy");
         super.onDestroy();
-        saveBitmap();
+        if (penCallback.needsSave())
+            binding.writerview.saveBitmap();
 
 
 
     }
     private void initSurfaceView() {
 
-        binding.writerview.setBackgroundColor(Color.WHITE);
-        binding.writerview.setZOrderOnTop(true);
-        binding.writerview.getHolder().setFormat(PixelFormat.TRANSPARENT);
+//        binding.writerview.setBackgroundColor(Color.WHITE);
+//        binding.writerview.setZOrderOnTop(true);
+//        binding.writerview.getHolder().setFormat(PixelFormat.TRANSPARENT);
+        binding.writerview.setBackground(R.drawable.page_bkgrnd);
+        binding.writerview.setFilepath(filepath);
+        binding.writerview.setFilename(filename);
 
-
-        binding.writerview.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-            @Override
-            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int
-                    oldRight, int oldBottom) {
-                Rect limit = new Rect();
-                binding.writerview.getLocalVisibleRect(limit);
-
-                touchHelper.setStrokeWidth(STROKE_WIDTH);
-                touchHelper.setStrokeStyle(TouchHelper.STROKE_STYLE_MARKER);
-                touchHelper.setStrokeColor(Color.BLACK);
-                touchHelper.setLimitRect(limit, new ArrayList<Rect>()).openRawDrawing();
-
-                touchHelper.setRawDrawingEnabled(false);
-                touchHelper.setSingleRegionMode();
-                touchHelper.setRawDrawingEnabled(true);
-                touchHelper.enableFingerTouch(false);
-                touchHelper.setRawDrawingRenderEnabled(true);
-                touchHelper.setRawInputReaderEnable(true);
-
-
-                binding.writerview.addOnLayoutChangeListener(this);
-            }
-        });
+//        limit = new Rect();
+//        binding.writerview.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+//            @Override
+//            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int
+//                    oldRight, int oldBottom) {
+////                Rect limit = new Rect();
+////                binding.writerview.getLocalVisibleRect(limit);
+////
+////                touchHelper.setStrokeWidth(STROKE_WIDTH);
+////                touchHelper.setStrokeStyle(TouchHelper.STROKE_STYLE_MARKER);
+////                touchHelper.setStrokeColor(Color.BLACK);
+////                touchHelper.setLimitRect(limit, new ArrayList<Rect>()).openRawDrawing();
+////
+////                touchHelper.setRawDrawingEnabled(false);
+////                touchHelper.setSingleRegionMode();
+////                touchHelper.setRawDrawingEnabled(true);
+////                touchHelper.enableFingerTouch(false);
+////                touchHelper.setRawDrawingRenderEnabled(true);
+////                touchHelper.setRawInputReaderEnable(true);
+////
+////
+////                binding.writerview.addOnLayoutChangeListener(this);
+//            }
+//        });
 
 
         final SurfaceHolder.Callback surfaceCallback = new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
+//                Rect limit = new Rect();
+                Rect limit = new Rect();
+                binding.writerview.getGlobalVisibleRect(limit);
+                limitRectList.add(limit);
+//
+//                touchHelper.setStrokeWidth(STROKE_WIDTH);
+//                touchHelper.setStrokeStyle(TouchHelper.STROKE_STYLE_MARKER);
+//                touchHelper.setStrokeColor(Color.BLACK);
+//                touchHelper.setLimitRect(limit, new ArrayList<Rect>()).openRawDrawing();
+//
+//                touchHelper.setRawDrawingEnabled(false);
+//                touchHelper.setSingleRegionMode();
+//                touchHelper.setRawDrawingEnabled(true);
+//                touchHelper.enableFingerTouch(false);
+//                touchHelper.setRawDrawingRenderEnabled(true);
+//                touchHelper.setRawInputReaderEnable(true);
+                startTouchHelper();
+                binding.writerview.redrawSurface();
                 Log.d(TAG, "surfaceCreated");
             }
 
@@ -305,6 +326,26 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
         binding.writerview.getHolder().addCallback(surfaceCallback);
     }
 
+    private void startTouchHelper() {
+        if (limitRectList.size() < 1) {
+            return;
+        }
+        Log.d(TAG, "startTouchHelper");
+        Log.d(TAG, String.valueOf(limitRectList));
+
+        touchHelper.setStrokeWidth(STROKE_WIDTH);
+        touchHelper.setStrokeStyle(TouchHelper.STROKE_STYLE_MARKER);
+        touchHelper.setStrokeColor(Color.BLACK);
+        touchHelper.setLimitRect(limitRectList, new ArrayList<Rect>())
+                .openRawDrawing();
+
+        touchHelper.setRawDrawingEnabled(false);
+        touchHelper.setMultiRegionMode();
+        touchHelper.setRawDrawingEnabled(true);
+        touchHelper.enableFingerTouch(true);
+        touchHelper.setRawDrawingRenderEnabled(true);
+
+    }
     private void initPaint(){
         penPaint = new Paint();
         penPaint.setAntiAlias(true);
@@ -339,8 +380,14 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
     }
     private void updatePage(boolean forward)
     {
+        touchHelper.setRawDrawingEnabled(false);
+        touchHelper.setRawDrawingRenderEnabled(false);
+        touchHelper.closeRawDrawing();
+//        binding.writerview.mBitmap.recycle();
+
         // move forward or backwards in the diary
-        saveBitmap();
+        if (penCallback.needsSave())
+            binding.writerview.saveBitmap();
 
         if (forward){
             if (daypage < daypageCount){
@@ -369,13 +416,18 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
         datebox.setText(currentdate.format(DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy (")) + String.valueOf(daypage) + "/" + String.valueOf(daypageCount)+")");
 
         filename = currentdate.format(DateTimeFormatter.ofPattern("yyyyMMdd-")) + String.valueOf(daypage) + ".png";
-        safeLoadBitmap();
+        binding.writerview.setFilename(filename);
+        binding.writerview.redrawSurface();
+//        safeLoadBitmap();
+        startTouchHelper();
     }
 
     private void addPage(){
         // add a page to the end and move forward
-        needsSave = true;
-        saveBitmap();
+
+
+        penCallback.setNeedsSave(true);
+        binding.writerview.saveBitmap();
         daypageCount++;
         updatePage(true);
 
@@ -383,7 +435,10 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
     private void deletePage(){
         // delete a page
+
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//        binding.writerview.redrawSurface();
 
         builder.setTitle("Confirm delete");
         builder.setMessage("You are about to permanently delete the current page. Are you sure?");
@@ -392,7 +447,9 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
             public void onClick(DialogInterface dialog, int which) {
                 int deletePage = daypage;
-
+                touchHelper.setRawDrawingEnabled(false);
+                touchHelper.setRawDrawingRenderEnabled(false);
+                touchHelper.closeRawDrawing();
                 try {
                     File externalFile;
                     externalFile = new File(getExternalFilesDir(filepath), filename);
@@ -415,17 +472,32 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
                         }
 
                     }
-                    daypageCount--;
-                    needsSave=false;
-                    updatePage(false);
-                    if (deletePage==1){
-                        updatePage(true);
-                    }
+                    penCallback.setNeedsSave(false);
+                    if (daypageCount!=1)
+                        daypageCount--;
+
+//                    daypageCount--;
+
+                    if (deletePage!=1)
+                        daypage--;
+
+                    datebox = findViewById(R.id.date_text);
+                    datebox.setText(currentdate.format(DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy (")) + String.valueOf(daypage) + "/" + String.valueOf(daypageCount)+")");
+
+                    filename = currentdate.format(DateTimeFormatter.ofPattern("yyyyMMdd-")) + String.valueOf(daypage) + ".png";
+                    binding.writerview.setFilename(filename);
+                    binding.writerview.redrawSurface();
+//                    updatePage(false);
+//                    if (deletePage==1){
+//                        updatePage(true);
+//                    }
+                    startTouchHelper();
                 } catch (Exception e) {
                     Log.d("loadBitmap Error: ", e.getMessage(), e);
                 }
                 dialog.dismiss();
             }
+
         });
 
         builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
@@ -442,7 +514,9 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
     private void savePages(){
         // let the user choose a time frame for export then export to pdf
-        saveBitmap();
+        binding.writerview.redrawSurface();
+
+        binding.writerview.saveBitmap();
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.MaterialThemeDialog);
         String item[] = { "Day", "Month", "Year"};
 
@@ -462,8 +536,8 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
                         try {
-                            needsSave = true;
-                            saveBitmap();
+//                            needsSave = true;
+//                            saveBitmap();
                             writeToPDF(timeframe[0]);
                         } catch (FileNotFoundException e) {
                             throw new RuntimeException(e);
@@ -490,258 +564,273 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
     }
 
-    private RawInputCallback callback = new RawInputCallback() {
-
-        @Override
-        public void onBeginRawDrawing(boolean b, TouchPoint touchPoint) {
-            Log.d(TAG, "onBeginRawDrawing");
-
-            disableFingerTouch(getApplicationContext());
-            points.clear();
-            rawDrawing = true;
-        }
-
-        @Override
-        public void onEndRawDrawing(boolean b, TouchPoint touchPoint) {
-            Log.d(TAG, "onEndRawDrawing");
-
-            rawDrawing = false;
-            enableFingerTouch(getApplicationContext());
-
-            // wait until there's been no writing input then
-            // restart the touch helper - this is needed to
-            // keep the navigation ball working
-            lastDraw = currentTimeMillis();
-            if (!redrawRunning)
-            {
-                redrawRunning = true;
-                Runnable thread = () -> {
-                    long currentTime = currentTimeMillis();
-                    while (currentTime<lastDraw + refreshInterval)
-                    {
-                        currentTime = currentTimeMillis();
-                    }
-                    Log.d(TAG, "thread: redrawing");
-
-                    touchHelper.setRawDrawingEnabled(false);
-                    touchHelper.setRawDrawingEnabled(true);
-
-                    redrawRunning = false;
-
-                };
-                new Thread(thread).start();
-            }
-
-        }
-
-        @Override
-        public void onRawDrawingTouchPointMoveReceived(TouchPoint touchPoint) {
-            lastDraw = currentTimeMillis();
-        }
-
-        @Override
-        public void onRawDrawingTouchPointListReceived(TouchPointList touchPointList) {
-            drawToBitmap(touchPointList.getPoints());
-        }
-
-        @Override
-        public void onBeginRawErasing(boolean b, TouchPoint touchPoint) {
-            Log.d(TAG, "onBeginRawErasing");
-
-            points.clear();
-            disableFingerTouch(getApplicationContext());
-            rawDrawing = true;
-            redrawSurface();
-        }
-
-        @Override
-        public void onEndRawErasing(boolean b, TouchPoint touchPoint) {
-            Log.d(TAG, "onEndRawErasing");
-
-            points.add(touchPoint);
-            List<TouchPoint> pointList = new ArrayList<>(points);
-            points.clear();
-            TouchPointList touchPointList = new TouchPointList();
-            for (TouchPoint point : pointList) {
-                touchPointList.add(point);
-            }
-            eraseBitmap(pointList);
-            redrawSurface();
-            enableFingerTouch(getApplicationContext());
-            rawDrawing = false;
-        }
-
-        @Override
-        public void onRawErasingTouchPointMoveReceived(TouchPoint touchPoint) {
-            points.add(touchPoint);
-            if (points.size() >= 50) {
-                List<TouchPoint> pointList = new ArrayList<>(points);
-                points.clear();
-                TouchPointList touchPointList = new TouchPointList();
-                for (TouchPoint point : pointList) {
-                    touchPointList.add(point);
-                }
-                eraseBitmap(pointList);
-                redrawSurface();
-            }
-        }
-
-        @Override
-        public void onRawErasingTouchPointListReceived(TouchPointList touchPointList) {
-            Log.d(TAG, "onRawErasingTouchPointListReceived");
-            eraseBitmap(touchPointList.getPoints());
-            redrawSurface();
-
-        }
-
-        @Override
-        public void onPenUpRefresh(RectF refreshRect) {
-            getRxManager().enqueue(new PartialRefreshRequest(WriterActivity.this, binding.writerview, refreshRect)
-                            .setBitmap(bitmap),
-                    new RxCallback<PartialRefreshRequest>() {
-                        @Override
-                        public void onNext(@NonNull PartialRefreshRequest partialRefreshRequest) {
-                        }
-                    });
-        }
-    };
-
-    public static void disableFingerTouch(Context context) {
-        int width = context.getResources().getDisplayMetrics().widthPixels;
-        int height = context.getResources().getDisplayMetrics().heightPixels;
-        Rect rect = new Rect(0, 0, width, height);
-        Rect[] arrayRect =new Rect[]{rect};
-        EpdController.setAppCTPDisableRegion(context, arrayRect);
-    }
-
-    public static void enableFingerTouch(Context context) {
-        EpdController.appResetCTPDisableRegion(context);
-    }
-
-    private RxManager getRxManager() {
-        if (rxManager == null) {
-            RxManager.Builder.initAppContext(this);
-            rxManager = RxManager.Builder.sharedSingleThreadManager();
-        }
-        return rxManager;
-    }
-
-    public void drawToBitmap(List<TouchPoint> list) {
-        // save all pen input to a bitmap
-        needsSave=true;
-        Path path = new Path();
-
-        PointF prePoint = new PointF(list.get(0).x, list.get(0).y);
-        path.moveTo(prePoint.x, prePoint.y);
-        for (TouchPoint point : list) {
-            path.quadTo(prePoint.x, prePoint.y, point.x, point.y);
-            prePoint.x = point.x;
-            prePoint.y = point.y;
-        }
-
-        canvas.drawPath(path, penPaint);
-    }
-
-    public void eraseBitmap(List<TouchPoint> list) {
-        // save all eraser input to a bitmap
-        needsSave=true;
-
-        Path path = new Path();
-        PointF prePoint = new PointF(list.get(0).x, list.get(0).y);
-        path.moveTo(prePoint.x, prePoint.y);
-        for (TouchPoint point : list) {
-            path.quadTo(prePoint.x, prePoint.y, point.x, point.y);
-            prePoint.x = point.x;
-            prePoint.y = point.y;
-        }
-        
-        canvas.drawPath(path, eraserPaint);
-
-        // add the background back on top as we're erasing with white ink
-        Drawable drawable = ResourcesCompat.getDrawable(getResources(), R.drawable.pagelines, null);
-        drawable.setBounds(0, 0,binding.writerview.getWidth(), binding.writerview.getHeight());
-        drawable.draw(canvas);
-
-    }
-    public void redrawSurface() {
-        if (!binding.writerview.getHolder().getSurface().isValid()){
-            return;
-        }
-        touchHelper.setRawDrawingRenderEnabled(false);// debug
-        Log.d(TAG, "redrawSurface");
-        Canvas lockCanvas = binding.writerview.getHolder().lockCanvas();
-        lockCanvas.drawColor(Color.WHITE);
-        lockCanvas.drawBitmap(bitmap, 0, 0, null);
-        binding.writerview.getHolder().unlockCanvasAndPost(lockCanvas);
-        touchHelper.setRawDrawingRenderEnabled(true); // debug
-    }
-
-    public void saveBitmap() {
-        if (needsSave) {
-            File myExternalFile = new File(getExternalFilesDir(filepath), filename);
-            try {
-                FileOutputStream fos = new FileOutputStream(myExternalFile);
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
-                fos.close();
-            } catch (Exception e) {
-                Log.d("SAVE_IMAGE", e.getMessage(), e);
-            }
-        }
-    }
-
-    public void loadBitmap() {
-        try {
-            Log.d(TAG, "loadBitmap");
-            needsSave = false;
-            File myExternalFile = new File(getExternalFilesDir(filepath), filename);
-            if (myExternalFile.exists())
-            {
-                BitmapFactory.Options opt = new BitmapFactory.Options();
-                opt.inScaled = true;
-                opt.inMutable = true;
-                bitmap = BitmapFactory.decodeStream(new FileInputStream(myExternalFile),null, opt);
-                canvas = new Canvas(bitmap);
-            }
-            else
-            {
-                resetBitmap();
-            }
-        } catch (Exception e) {
-            Log.d("loadBitmap Error: ", e.getMessage(), e);
-        }
-    }
-
-    public void resetBitmap() {
-        Log.d(TAG, "resetBitmap");
-        try {
-            bitmap = null;
-            Drawable drawable = ResourcesCompat.getDrawable(getResources(), R.drawable.pagelines, null);
-            bitmap = Bitmap.createBitmap(binding.writerview.getWidth(), binding.writerview.getHeight(), Bitmap.Config.ARGB_8888);
-            drawable.setBounds(0, 0, binding.writerview.getWidth(), binding.writerview.getHeight());
-            canvas = new Canvas(bitmap);
-            canvas.drawColor(Color.WHITE);
-            drawable.draw(canvas);
-        }
-        catch (Exception e) {
-            Log.d("resetBitmap Error: ", e.getMessage(), e);
-        }
-        return;
-    }
-
-    public void safeLoadBitmap()
-    {
-        while (!binding.writerview.getHolder().getSurface().isValid()) {
-            // wait for surfaceview
-        }
-        loadBitmap();
-
-        if (bitmap == null) {
-            resetBitmap();
-        }
-        redrawSurface();
-        return;
-
-    }
+//    private RawInputCallback callback = new RawInputCallback() {
+//
+//        @Override
+//        public void onBeginRawDrawing(boolean b, TouchPoint touchPoint) {
+//            Log.d(TAG, "onBeginRawDrawing");
+//
+//            disableFingerTouch(getApplicationContext());
+//            points.clear();
+//            rawDrawing = true;
+//        }
+//
+//        @Override
+//        public void onEndRawDrawing(boolean b, TouchPoint touchPoint) {
+//            Log.d(TAG, "onEndRawDrawing");
+//
+//            rawDrawing = false;
+//            enableFingerTouch(getApplicationContext());
+//
+//            // wait until there's been no writing input then
+//            // restart the touch helper - this is needed to
+//            // keep the navigation ball working
+//            lastDraw = currentTimeMillis();
+//            if (!redrawRunning)
+//            {
+//                redrawRunning = true;
+//                Runnable thread = () -> {
+//                    long currentTime = currentTimeMillis();
+//                    while (currentTime<lastDraw + refreshInterval)
+//                    {
+//                        currentTime = currentTimeMillis();
+//                    }
+//                    Log.d(TAG, "thread: redrawing");
+////                    binding.writerview.redrawSurface();
+//
+//                    touchHelper.setRawDrawingEnabled(false);
+//                    touchHelper.setRawDrawingEnabled(true);
+//
+//                    redrawRunning = false;
+//
+//                };
+//                new Thread(thread).start();
+//            }
+//
+//        }
+//
+//        @Override
+//        public void onRawDrawingTouchPointMoveReceived(TouchPoint touchPoint) {
+//            lastDraw = currentTimeMillis();
+//        }
+//
+//        @Override
+//        public void onRawDrawingTouchPointListReceived(TouchPointList touchPointList) {
+////            needsSave=true;
+//
+//            binding.writerview.drawToBitmap(touchPointList.getPoints());
+//        }
+//
+//        @Override
+//        public void onBeginRawErasing(boolean b, TouchPoint touchPoint) {
+//            Log.d(TAG, "onBeginRawErasing");
+//
+//            points.clear();
+//            disableFingerTouch(getApplicationContext());
+//            rawDrawing = true;
+//            binding.writerview.redrawSurface();
+//        }
+//
+//        @Override
+//        public void onEndRawErasing(boolean b, TouchPoint touchPoint) {
+//            Log.d(TAG, "onEndRawErasing");
+//
+//            points.add(touchPoint);
+//            List<TouchPoint> pointList = new ArrayList<>(points);
+//            points.clear();
+//            TouchPointList touchPointList = new TouchPointList();
+//            for (TouchPoint point : pointList) {
+//                touchPointList.add(point);
+//            }
+////            needsSave=true;
+//
+//            binding.writerview.eraseBitmap(pointList);
+//            binding.writerview.redrawSurface();
+//            enableFingerTouch(getApplicationContext());
+//            rawDrawing = false;
+//        }
+//
+//        @Override
+//        public void onRawErasingTouchPointMoveReceived(TouchPoint touchPoint) {
+//            points.add(touchPoint);
+//            if (points.size() >= 50) {
+//                List<TouchPoint> pointList = new ArrayList<>(points);
+//                points.clear();
+//                TouchPointList touchPointList = new TouchPointList();
+//                for (TouchPoint point : pointList) {
+//                    touchPointList.add(point);
+//                }
+////                needsSave=true;
+//
+//                binding.writerview.eraseBitmap(pointList);
+//                binding.writerview.redrawSurface();
+//            }
+//        }
+//
+//        @Override
+//        public void onRawErasingTouchPointListReceived(TouchPointList touchPointList) {
+//            Log.d(TAG, "onRawErasingTouchPointListReceived");
+////            needsSave=true;
+//
+//            binding.writerview.eraseBitmap(touchPointList.getPoints());
+//            binding.writerview.redrawSurface();
+//
+//        }
+//
+//        @Override
+//        public void onPenUpRefresh(RectF refreshRect) {
+//            Log.d(TAG, "onPenUpRefresh " + rawDrawing);
+//            Rect limit = new Rect();
+//            Point offset = new Point();
+//            binding.writerview.getGlobalVisibleRect(limit,offset);
+//            refreshRect.offset(-offset.x,-offset.y);
+////            binding.writerview.partialRedraw(refreshRect);
+//            getRxManager().enqueue(new PartialRefreshRequest(WriterActivity.this, binding.writerview, refreshRect)
+//                            .setBitmap(binding.writerview.mBitmap),
+//                    new RxCallback<PartialRefreshRequest>() {
+//                        @Override
+//                        public void onNext(@NonNull PartialRefreshRequest partialRefreshRequest) {
+//                        }
+//                    });
+//        }
+//    };
+//
+//    public static void disableFingerTouch(Context context) {
+//        int width = context.getResources().getDisplayMetrics().widthPixels;
+//        int height = context.getResources().getDisplayMetrics().heightPixels;
+//        Rect rect = new Rect(0, 0, width, height);
+//        Rect[] arrayRect =new Rect[]{rect};
+//        EpdController.setAppCTPDisableRegion(context, arrayRect);
+//    }
+//
+//    public static void enableFingerTouch(Context context) {
+//        EpdController.appResetCTPDisableRegion(context);
+//    }
+//
+//    private RxManager getRxManager() {
+//        if (rxManager == null) {
+//            RxManager.Builder.initAppContext(this);
+//            rxManager = RxManager.Builder.sharedSingleThreadManager();
+//        }
+//        return rxManager;
+//    }
+//
+//    public void drawToBitmap(List<TouchPoint> list) {
+//        // save all pen input to a bitmap
+////        needsSave=true;
+//        Path path = new Path();
+//
+//        PointF prePoint = new PointF(list.get(0).x, list.get(0).y);
+//        path.moveTo(prePoint.x, prePoint.y);
+//        for (TouchPoint point : list) {
+//            path.quadTo(prePoint.x, prePoint.y, point.x, point.y);
+//            prePoint.x = point.x;
+//            prePoint.y = point.y;
+//        }
+//
+//        canvas.drawPath(path, penPaint);
+//    }
+//
+//    public void eraseBitmap(List<TouchPoint> list) {
+//        // save all eraser input to a bitmap
+////        needsSave=true;
+//
+//        Path path = new Path();
+//        PointF prePoint = new PointF(list.get(0).x, list.get(0).y);
+//        path.moveTo(prePoint.x, prePoint.y);
+//        for (TouchPoint point : list) {
+//            path.quadTo(prePoint.x, prePoint.y, point.x, point.y);
+//            prePoint.x = point.x;
+//            prePoint.y = point.y;
+//        }
+//
+//        canvas.drawPath(path, eraserPaint);
+//
+//        // add the background back on top as we're erasing with white ink
+//        Drawable drawable = ResourcesCompat.getDrawable(getResources(), R.drawable.pagelines, null);
+//        drawable.setBounds(0, 0,binding.writerview.getWidth(), binding.writerview.getHeight());
+//        drawable.draw(canvas);
+//
+//    }
+//    public void redrawSurface() {
+//        if (!binding.writerview.getHolder().getSurface().isValid()){
+//            return;
+//        }
+//        touchHelper.setRawDrawingRenderEnabled(false);// debug
+//        Log.d(TAG, "redrawSurface");
+//        Canvas lockCanvas = binding.writerview.getHolder().lockCanvas();
+//        lockCanvas.drawColor(Color.WHITE);
+//        lockCanvas.drawBitmap(bitmap, 0, 0, null);
+//        binding.writerview.getHolder().unlockCanvasAndPost(lockCanvas);
+//        touchHelper.setRawDrawingRenderEnabled(true); // debug
+//    }
+//
+//    public void saveBitmap() {
+////        if (needsSave) {
+//            File myExternalFile = new File(getExternalFilesDir(filepath), filename);
+//            try {
+//                FileOutputStream fos = new FileOutputStream(myExternalFile);
+//                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+//                fos.close();
+//            } catch (Exception e) {
+//                Log.d("SAVE_IMAGE", e.getMessage(), e);
+//            }
+////        }
+//    }
+//
+//    public void loadBitmap() {
+//        try {
+//            Log.d(TAG, "loadBitmap");
+////            needsSave = false;
+//            File myExternalFile = new File(getExternalFilesDir(filepath), filename);
+//            if (myExternalFile.exists())
+//            {
+//                BitmapFactory.Options opt = new BitmapFactory.Options();
+//                opt.inScaled = true;
+//                opt.inMutable = true;
+//                bitmap = BitmapFactory.decodeStream(new FileInputStream(myExternalFile),null, opt);
+//                canvas = new Canvas(bitmap);
+//            }
+//            else
+//            {
+//                resetBitmap();
+//            }
+//        } catch (Exception e) {
+//            Log.d("loadBitmap Error: ", e.getMessage(), e);
+//        }
+//    }
+//
+//    public void resetBitmap() {
+//        Log.d(TAG, "resetBitmap");
+//        try {
+//            bitmap = null;
+//            Drawable drawable = ResourcesCompat.getDrawable(getResources(), R.drawable.pagelines, null);
+//            bitmap = Bitmap.createBitmap(binding.writerview.getWidth(), binding.writerview.getHeight(), Bitmap.Config.ARGB_8888);
+//            drawable.setBounds(0, 0, binding.writerview.getWidth(), binding.writerview.getHeight());
+//            canvas = new Canvas(bitmap);
+//            canvas.drawColor(Color.WHITE);
+//            drawable.draw(canvas);
+//        }
+//        catch (Exception e) {
+//            Log.d("resetBitmap Error: ", e.getMessage(), e);
+//        }
+//        return;
+//    }
+//
+//    public void safeLoadBitmap()
+//    {
+//        while (!binding.writerview.getHolder().getSurface().isValid()) {
+//            // wait for surfaceview
+//        }
+//        loadBitmap();
+//
+//        if (bitmap == null) {
+//            resetBitmap();
+//        }
+//        redrawSurface();
+//        return;
+//
+//    }
 
     private void writeToPDF(int timeframe) throws FileNotFoundException {
 

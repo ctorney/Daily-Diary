@@ -2,6 +2,7 @@ package com.onyx.dailydiary.utils;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.view.SurfaceView;
@@ -13,11 +14,11 @@ import com.onyx.android.sdk.utils.RectUtils;
 
 public class PartialRefreshRequest extends RxRequest {
     private RectF refreshRect;
-    private SurfaceView surfaceView;
+    private BitmapView surfaceView;
     private Bitmap bitmap;
     private static final String TAG = PartialRefreshRequest.class.getSimpleName();
 
-    public PartialRefreshRequest(Context context, SurfaceView surfaceView, RectF refreshRect) {
+    public PartialRefreshRequest(Context context, BitmapView surfaceView, RectF refreshRect) {
 
         setContext(context);
 
@@ -35,12 +36,14 @@ public class PartialRefreshRequest extends RxRequest {
         renderToScreen(surfaceView, bitmap);
     }
 
-    public void renderToScreen(SurfaceView surfaceView, Bitmap bitmap) {
+    public void renderToScreen(BitmapView surfaceView, Bitmap bitmap) {
         if (surfaceView == null || !surfaceView.getHolder().getSurface().isValid()) {
             return;
         }
+
+
         Rect renderRect = RectUtils.toRect(refreshRect);
-        EpdController.setViewDefaultUpdateMode(surfaceView, UpdateMode.HAND_WRITING_REPAINT_MODE);
+//        EpdController.setViewDefaultUpdateMode(surfaceView, UpdateMode.REGAL);
         Canvas canvas = surfaceView.getHolder().lockCanvas(renderRect);
         if (canvas == null) {
             return;
@@ -52,7 +55,7 @@ public class PartialRefreshRequest extends RxRequest {
             e.printStackTrace();
         } finally {
             surfaceView.getHolder().unlockCanvasAndPost(canvas);
-            EpdController.resetViewUpdateMode(surfaceView);
+//            EpdController.resetViewUpdateMode(surfaceView);
         }
     }
 
