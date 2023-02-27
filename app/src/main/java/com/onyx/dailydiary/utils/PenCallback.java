@@ -137,9 +137,9 @@ public class PenCallback extends RawInputCallback {
         minTouchY = (int)touchPoint.y;
         maxTouchY = (int)touchPoint.y;
         rawDrawing = true;
-        for (BitmapView view:views) {
-            view.redrawSurface();
-        }
+//         for (BitmapView view:views) {
+//             view.redrawSurface();
+//         }
         
         
     }
