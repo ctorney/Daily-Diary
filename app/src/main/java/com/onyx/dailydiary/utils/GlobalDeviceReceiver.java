@@ -15,6 +15,7 @@ public class GlobalDeviceReceiver extends BroadcastReceiver {
     public static final String SYSTEM_UI_DIALOG_CLOSE_ACTION = DeviceReceiver.SYSTEM_UI_DIALOG_CLOSE_ACTION;
     public static final String SYSTEM_SCREEN_ON_ACTION = Intent.ACTION_SCREEN_ON;
 
+
     public static final String SYSTEM_SCREEN_OFF_ACTION = Intent.ACTION_SCREEN_OFF;
 
     public static final String DIALOG_TYPE_NOTIFICATION_PANEL = DeviceReceiver.DIALOG_TYPE_NOTIFICATION_PANEL;

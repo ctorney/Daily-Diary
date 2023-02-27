@@ -202,12 +202,12 @@ public class BitmapView extends SurfaceView {
         return mBitmap;
     }
 
-    public void updateBitmap()
-    {
-        if (mBitmap==null)
-            return;
+    @Override
+    public void onFocusChanged(boolean gainFocus,int direction,Rect previouslyFocusedRect) {
+        Log.d(TAG, "onFocusChanged");
 
-
+        redrawSurface();
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
     }
 
     public void resetBitmap() {
@@ -277,12 +277,12 @@ public class BitmapView extends SurfaceView {
     }
 
 
-    public void partialRedraw(RectF refreshRect) {
+
+    public void partialRedraw(Rect renderRect) {
 
         if (!getHolder().getSurface().isValid())
             return;
 
-        Rect renderRect = RectUtils.toRect(refreshRect);
         Canvas canvas = getHolder().lockCanvas(renderRect);
         if (canvas == null) {
             return;
