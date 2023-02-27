@@ -254,7 +254,6 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
             return;
         }
         Log.d(TAG, "startTouchHelper");
-        Log.d(TAG, String.valueOf(limitRectList));
 
         touchHelper.setStrokeWidth(STROKE_WIDTH);
         touchHelper.setStrokeStyle(TouchHelper.STROKE_STYLE_MARKER);

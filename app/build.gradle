@@ -41,6 +41,10 @@ android {
 
 
 android {
+    signingConfigs {
+        config {
+        }
+    }
     buildFeatures {
         dataBinding = true
         viewBinding = true

@@ -368,7 +368,7 @@ public class BitmapView extends SurfaceView {
     }
 
     private void initView(){
-        Log.d(TAG, "initPaint");
+        Log.d(TAG, "initView");
 
         penPaint = new Paint();
         penPaint.setAntiAlias(true);
