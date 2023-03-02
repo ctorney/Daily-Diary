@@ -14,6 +14,7 @@ A calendar and daily notes app for Onyx Boox devices. Only currently tested on M
 <div align="center">
     <img src="resources/calendar.png" width="300px"</img> 
         <img src="resources/diarypage.png" width="300px"</img> 
+        <img src="resources/editcalendars.png" width="300px"</img> 
 
 </div>
 
