@@ -1,0 +1,41 @@
+<resources>
+    <string name="app_name">Daily Diary</string>
+    <string name="action_settings">Mis calendarios</string>
+    <string name="edit_calendars">Editar calendarios</string>
+    <string name="sync_calendars">Sincronizar calendarios</string>
+
+    <string name="ok">Aceptar</string>
+    <string name="cancel">Cancelar</string>
+
+    <string name="Sunday">DOM</string>
+    <string name="Monday">LUN</string>
+    <string name="Tuesday">MAR</string>
+    <string name="Wednesday">MIÉ</string>
+    <string name="Thursday">JUE</string>
+    <string name="Friday">VIE</string>
+    <string name="Saturday">SÁB</string>
+    <string name="title_activity_fullscreen">FullscreenActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="title_activity_writer">WriterActivity</string>
+    <string name="tasks">Tareas</string>
+    <string name="clear_all">Borrar todo</string>
+    <string name="daily_summary">Resumen diario</string>
+    <string name="open_diary">Abrir diario</string>
+    <string name="clear_summary">Borrar resumen</string>
+
+
+    <string name="day">Día</string>
+    <string name="month">Mes</string>
+    <string name="year">Año</string>
+    <string name="export_title">Seleccione el intervalo de tiempo a exportar</string>
+    <string name="export_in_progress">Exportando a PDF…</string>
+    <string name="delete_title">Confirmar eliminación</string>
+    <string name="confirm_delete">Está a punto de eliminar permanentemente la página actual. ¿Desea continuar?</string>
+    <string name="calendar_name">Nombre del calendario:</string>
+    <string name="ical_url">URL de iCal:</string>
+    <string name="existing_calendars">Calendarios existentes</string>
+    <string name="downloading_calendars">Descargando calendarios…</string>
+
+
+</resources>
