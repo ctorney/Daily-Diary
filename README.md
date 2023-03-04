@@ -14,14 +14,11 @@ A calendar and daily notes app for Onyx Boox devices. Only currently tested on M
 <div align="center">
     <img src="resources/calendar.png" width="300px"</img> 
         <img src="resources/diarypage.png" width="300px"</img> 
+        <img src="resources/editcalendars.png" width="300px"</img> 
 
 </div>
 
 
-Pre-release apk available [here](app/build/outputs/apk/debug/app-debug.apk)
+Alpha release apk available [here](https://github.com/ctorney/Daily-Diary/releases/tag/v0.1.0-alpha)
 
-## Still to do
-- [x] swipe gestures
-- [x] calendar import and display
-- [ ] ~~pen settings?~~
-- [x] improve bitmap redraw/touch helper code 
+
