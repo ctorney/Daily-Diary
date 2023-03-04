@@ -1,0 +1,41 @@
+<resources>
+    <string name="app_name">Daily Diary</string>
+    <string name="action_settings">Moje kalendáøe</string>
+    <string name="edit_calendars">Edit. kalendáøù</string>
+    <string name="sync_calendars">Synch. kalendáøù</string>
+
+    <string name="ok">OK</string>
+    <string name="cancel">Zru¹it</string>
+
+    <string name="Sunday">Ne</string>
+    <string name="Monday">Po</string>
+    <string name="Tuesday">Út</string>
+    <string name="Wednesday">St</string>
+    <string name="Thursday">Èt</string>
+    <string name="Friday">Pá</string>
+    <string name="Saturday">So</string>
+    <string name="title_activity_fullscreen">FullscreenActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="title_activity_writer">WriterActivity</string>
+    <string name="tasks">Úkoly</string>
+    <string name="clear_all">Odstranit v¹e</string>
+    <string name="daily_summary">Den</string>
+    <string name="open_diary">Otevøít deník</string>
+    <string name="clear_summary">Odstr. poznámky</string>
+
+
+    <string name="day">Den</string>
+    <string name="month">Mìsíc</string>
+    <string name="year">Rok</string>
+    <string name="export_title">Vybrat èasový interval pro export</string>
+    <string name="export_in_progress">Exportování do pdf...</string>
+    <string name="delete_title">Potvrzení odstranìní</string>
+    <string name="confirm_delete">Chystáte se trvale odstranit celou stránku. Jste si jisti?</string>
+    <string name="calendar_name">Název kalendáøe:</string>
+    <string name="ical_url">iCal URL:</string>
+    <string name="existing_calendars">Existující kalendáøe</string>
+    <string name="downloading_calendars">Stahování kalendáøù...</string>
+
+
+</resources>
