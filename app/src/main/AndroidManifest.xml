@@ -20,9 +20,6 @@
             android:name=".ical.CalendarActivity"
             android:exported="false" />
         <activity
-            android:name=".SettingsActivity"
-            android:exported="false" />
-        <activity
             android:name=".writer.WriterActivity"
             android:exported="false" />
         <activity

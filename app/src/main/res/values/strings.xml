@@ -4,6 +4,9 @@
     <string name="edit_calendars">Edit calendars</string>
     <string name="sync_calendars">Sync calendars</string>
 
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+
     <string name="Sunday">SUN</string>
     <string name="Monday">MON</string>
     <string name="Tuesday">TUE</string>
@@ -15,5 +18,24 @@
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="title_activity_writer">WriterActivity</string>
+    <string name="tasks">Tasks</string>
+    <string name="clear_all">Clear all</string>
+    <string name="daily_summary">Daily Summary</string>
+    <string name="open_diary">Open Diary</string>
+    <string name="clear_summary">Clear summary</string>
+
+
+    <string name="day">Day</string>
+    <string name="month">Month</string>
+    <string name="year">Year</string>
+    <string name="export_title">Select time interval for export</string>
+    <string name="export_in_progress">Exporting to pdf…</string>
+    <string name="delete_title">Confirm delete</string>
+    <string name="confirm_delete">You are about to permanently delete the current page. Are you sure?</string>
+    <string name="calendar_name">Calendar name:</string>
+    <string name="ical_url">iCal URL:</string>
+    <string name="existing_calendars">Existing calendars</string>
+    <string name="downloading_calendars">Downloading calendars…</string>
+
 
 </resources>

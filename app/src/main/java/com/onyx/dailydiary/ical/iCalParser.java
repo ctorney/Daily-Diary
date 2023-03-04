@@ -11,6 +11,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.onyx.dailydiary.R;
+
 import net.fortuna.ical4j.data.CalendarBuilder;
 //import net.fortuna.ical4j.filter.ComponentFilter;
 import net.fortuna.ical4j.data.CalendarOutputter;
@@ -189,7 +191,7 @@ public class iCalParser {
     public void sync_calendars(){
 
         loadCalendarList();
-        Toast.makeText(context, "downloading calendars..", Toast.LENGTH_LONG).show();
+        Toast.makeText(context, context.getResources().getString(R.string.downloading_calendars), Toast.LENGTH_LONG).show();
 
 //            Log.d(TAG, "calendar sync " + icsname);
 

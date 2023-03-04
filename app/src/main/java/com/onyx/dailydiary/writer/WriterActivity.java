@@ -339,67 +339,58 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        builder.setTitle("Confirm delete");
-        builder.setMessage("You are about to permanently delete the current page. Are you sure?");
+        builder.setTitle(getResources().getString(R.string.delete_title));
+        builder.setMessage(getResources().getString(R.string.confirm_delete));
 
-        builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(getResources().getString(R.string.ok), (dialog, which) -> {
+            int deletePage = daypage;
+            touchHelper.setRawDrawingEnabled(false);
+            touchHelper.setRawDrawingRenderEnabled(false);
+            touchHelper.closeRawDrawing();
+            try {
+                File externalFile;
+                externalFile = new File(getExternalFilesDir(filepath), filename);
+                if (externalFile.exists())
+                {
+                    externalFile.delete();
+                }
 
-            public void onClick(DialogInterface dialog, int which) {
-                int deletePage = daypage;
-                touchHelper.setRawDrawingEnabled(false);
-                touchHelper.setRawDrawingRenderEnabled(false);
-                touchHelper.closeRawDrawing();
-                try {
-                    File externalFile;
-                    externalFile = new File(getExternalFilesDir(filepath), filename);
+                for (int i = daypage; i < daypageCount; i++) {
+                    System.out.println(i);
+                    String newfilename =currentdate.format(DateTimeFormatter.ofPattern("yyyyMMdd-")) + String.valueOf(i) + ".png";
+
+                    String oldfilename =currentdate.format(DateTimeFormatter.ofPattern("yyyyMMdd-")) + String.valueOf(i+1) + ".png";
+                    externalFile = new File(getExternalFilesDir(filepath), oldfilename);
+                    File newExternalFile = new File(getExternalFilesDir(filepath), newfilename);
                     if (externalFile.exists())
                     {
-                        externalFile.delete();
-                    }
-
-                    for (int i = daypage; i < daypageCount; i++) {
-                        System.out.println(i);
-                        String newfilename =currentdate.format(DateTimeFormatter.ofPattern("yyyyMMdd-")) + String.valueOf(i) + ".png";
-
-                        String oldfilename =currentdate.format(DateTimeFormatter.ofPattern("yyyyMMdd-")) + String.valueOf(i+1) + ".png";
-                        externalFile = new File(getExternalFilesDir(filepath), oldfilename);
-                        File newExternalFile = new File(getExternalFilesDir(filepath), newfilename);
-                        if (externalFile.exists())
-                        {
-                            externalFile.renameTo(newExternalFile);
-
-                        }
+                        externalFile.renameTo(newExternalFile);
 
                     }
-                    penCallback.setNeedsSave(false);
-                    if (daypageCount!=1)
-                        daypageCount--;
 
-                    if (deletePage!=1)
-                        daypage--;
-
-                    datebox = findViewById(R.id.date_text);
-                    datebox.setText(currentdate.format(DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy (")) + String.valueOf(daypage) + "/" + String.valueOf(daypageCount)+")");
-
-                    filename = currentdate.format(DateTimeFormatter.ofPattern("yyyyMMdd-")) + String.valueOf(daypage) + ".png";
-                    binding.writerview.setFilename(filename);
-                    binding.writerview.redrawSurface();
-
-                    startTouchHelper();
-                } catch (Exception e) {
-                    Log.d("loadBitmap Error: ", e.getMessage(), e);
                 }
-                dialog.dismiss();
-            }
+                penCallback.setNeedsSave(false);
+                if (daypageCount!=1)
+                    daypageCount--;
 
+                if (deletePage!=1)
+                    daypage--;
+
+                datebox = findViewById(R.id.date_text);
+                datebox.setText(currentdate.format(DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy (")) + String.valueOf(daypage) + "/" + String.valueOf(daypageCount)+")");
+
+                filename = currentdate.format(DateTimeFormatter.ofPattern("yyyyMMdd-")) + String.valueOf(daypage) + ".png";
+                binding.writerview.setFilename(filename);
+                binding.writerview.redrawSurface();
+
+                startTouchHelper();
+            } catch (Exception e) {
+                Log.d("loadBitmap Error: ", e.getMessage(), e);
+            }
+            dialog.dismiss();
         });
 
-        builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
+        builder.setNegativeButton(getResources().getString(R.string.cancel), (dialog, which) -> dialog.dismiss());
 
         AlertDialog alert = builder.create();
         alert.show();
@@ -411,10 +402,10 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
         binding.writerview.redrawSurface();
         binding.writerview.saveBitmap();
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.MaterialThemeDialog);
-        String item[] = { "Day", "Month", "Year"};
+        String item[] = { getResources().getString(R.string.day),  getResources().getString(R.string.month),  getResources().getString(R.string.year)};
 
         final int[] timeframe = {0};
-        builder.setTitle("Select time interval for export")
+        builder.setTitle( getResources().getString(R.string.export_title))
                 .setSingleChoiceItems(item, 0,
                         new DialogInterface.OnClickListener() {
                             @Override
@@ -425,7 +416,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
                         })
                 // Set the action buttons
-                .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
                         try {
@@ -437,7 +428,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
 
                     }
                 })
-                .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                .setNegativeButton(getResources().getString(R.string.cancel), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.dismiss();
@@ -458,7 +449,7 @@ public class WriterActivity extends AppCompatActivity implements View.OnClickLis
     private void writeToPDF(int timeframe) throws FileNotFoundException {
 
         // this code makes a pdf from the pages of the diary and opens it
-        Toast.makeText(this, "Exporting to pdf...", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, getResources().getString(R.string.export_in_progress), Toast.LENGTH_LONG).show();
 
         LocalDate startDate = currentdate;
         LocalDate endDate = currentdate;

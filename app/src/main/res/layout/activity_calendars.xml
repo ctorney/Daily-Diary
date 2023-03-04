@@ -42,7 +42,7 @@
                 android:paddingLeft="10dp"
                 android:textColor="@color/white"
                 android:textSize="22sp"
-                android:text="Edit calendars" />
+                android:text="@string/edit_calendars" />
 
 
 
@@ -101,7 +101,7 @@
                 android:padding="2dp"
                 android:textColor="@color/black"
                 android:textSize="22sp"
-                android:text="Calendar name: " />
+                android:text="@string/calendar_name" />
 
             <EditText
                 android:id="@+id/name_text_input"
@@ -126,7 +126,7 @@
                 android:padding="2dp"
                 android:textColor="@color/black"
                 android:textSize="22sp"
-                android:text=" iCal URL: " />
+                android:text="@string/ical_url" />
 
             <EditText
                 android:id="@+id/url_text_input"
@@ -175,7 +175,7 @@
                 android:paddingTop="5dp"
                 android:paddingBottom="5dp"
                 android:textSize="22sp"
-                android:text="Existing calendars " />
+                android:text="@string/existing_calendars" />
 
 
             <androidx.recyclerview.widget.RecyclerView

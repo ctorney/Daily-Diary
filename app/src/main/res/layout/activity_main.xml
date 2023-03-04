@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
-
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -204,6 +203,7 @@
 
 
                                 <TextView
+                                    style="@android:style/TextAppearance.DeviceDefault.Medium"
                                     android:id="@+id/task_text"
                                     android:layout_width="0dp"
                                     android:layout_weight="1"
@@ -211,8 +211,7 @@
                                     android:layout_gravity="center_vertical|left"
                                     android:paddingLeft="10dp"
                                     android:textColor="@color/white"
-                                    android:textSize="22sp"
-                                    android:text="Tasks" />
+                                    android:text="@string/tasks" />
 
 
                                 <!--            <ImageButton-->
@@ -230,9 +229,8 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="match_parent"
                                     android:layout_weight="0.05"
-                                    android:textSize="16sp"
                                     android:stateListAnimator="@null"
-                                    android:text="Clear all" />
+                                    android:text="@string/clear_all" />
 
 
                             </LinearLayout>
@@ -274,6 +272,7 @@
 
 
                                 <TextView
+                                    style="@android:style/TextAppearance.DeviceDefault.Medium"
                                     android:id="@+id/summary_text"
                                     android:layout_width="0dp"
                                     android:layout_weight="1"
@@ -281,8 +280,7 @@
                                     android:layout_gravity="center_vertical|left"
                                     android:paddingLeft="10dp"
                                     android:textColor="@color/white"
-                                    android:textSize="22sp"
-                                    android:text="Daily Summary" />
+                                    android:text="@string/daily_summary" />
 
 
                                 <Button
@@ -291,8 +289,7 @@
                                     android:layout_height="match_parent"
                                     android:layout_weight="0.1"
                                     android:stateListAnimator="@null"
-                                    android:textSize="16sp"
-                                    android:text="Open Diary" />
+                                    android:text="@string/open_diary" />
 
 
                                 <Button
@@ -301,8 +298,7 @@
                                     android:layout_height="match_parent"
                                     android:layout_weight="0.1"
                                     android:stateListAnimator="@null"
-                                    android:textSize="16sp"
-                                    android:text="Clear summary" />
+                                    android:text="@string/clear_summary" />
 
 
                             </LinearLayout>
