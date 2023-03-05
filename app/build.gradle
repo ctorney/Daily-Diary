@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "com.onyx.dailydiary"
-        minSdk 29
+        minSdk 28
         targetSdk 33
         versionCode 1
         versionName "1.0"
