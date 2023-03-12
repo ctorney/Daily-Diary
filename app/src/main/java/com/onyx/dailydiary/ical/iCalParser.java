@@ -3,6 +3,8 @@ package com.onyx.dailydiary.ical;
 import static android.app.DownloadManager.Request.VISIBILITY_HIDDEN;
 import static android.app.DownloadManager.Request.VISIBILITY_VISIBLE;
 
+import static java.util.TimeZone.getTimeZone;
+
 import android.app.DownloadManager;
 import android.content.Context;
 import android.net.Uri;
@@ -27,9 +29,14 @@ import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
+import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.Period;
+import net.fortuna.ical4j.model.TimeZone;
+import net.fortuna.ical4j.model.TimeZoneRegistry;
+import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 import net.fortuna.ical4j.model.component.CalendarComponent;
 import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.util.MapTimeZoneCache;
 
 import java.io.BufferedReader;
@@ -41,15 +48,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -59,14 +69,15 @@ public class iCalParser {
     private static final String TAG = iCalParser.class.getSimpleName();
     ArrayList<ArrayList<String>> calendarList= new ArrayList<>();
     ArrayList<Calendar> iCalCalendars= new ArrayList<>();
+    ArrayList<TimeZoneRegistry> iCalTimeZones= new ArrayList<>();
     private Context context;
 
-//    Calendar calendar = null;
     public iCalParser(Context context) {
 
         this.context = context;
         System.setProperty("net.fortuna.ical4j.timezone.cache.impl", MapTimeZoneCache.class.getName());
         Log.d(TAG, "iCalParser");
+
 
     }
 
@@ -112,6 +123,7 @@ public class iCalParser {
     public void loadCalendars()
     {
         iCalCalendars.clear();
+        iCalTimeZones.clear();
         loadCalendarList();
 
         for (int i = 0; i < calendarList.size(); i++) {
@@ -126,8 +138,10 @@ public class iCalParser {
                 FileInputStream fin = new FileInputStream(file.getPath());
                 CalendarBuilder builder = new CalendarBuilder();
                 Calendar calendar = builder.build(fin);
-
                 iCalCalendars.add(calendar);
+                TimeZoneRegistry registry = builder.getRegistry();
+                iCalTimeZones.add(registry);
+
 
             } catch (Exception e) {
                 Log.d(TAG, e.getMessage());
@@ -138,10 +152,14 @@ public class iCalParser {
 
 
     public List<String> get_day_events(LocalDate inputDate){
-
+        Log.d(TAG, "get_day_events");
         List<String> eventList = new ArrayList<>();
-        for (Calendar calendar : iCalCalendars) {
 
+//        for (Calendar calendar : iCalCalendars) {
+        for (int i = 0; i < iCalCalendars.size(); i++) {
+
+            Calendar calendar = iCalCalendars.get(i);
+            TimeZoneRegistry registry = iCalTimeZones.get(i);
             try {
                 DateTime selectedDate = new DateTime(Date.from(inputDate.atStartOfDay().plusSeconds(1).atZone(ZoneId.systemDefault()).toInstant()));
 
@@ -153,7 +171,6 @@ public class iCalParser {
 
                 DateTimeFormatter fullformatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-                LocalDateTime eventTime;
 
                 Iterator<CalendarComponent> ci = events.iterator();
                 while (ci.hasNext()) {
@@ -162,11 +179,17 @@ public class iCalParser {
                         VEvent event = (VEvent) c;
                         String summary = event.getProperty("SUMMARY").getValue();
                         String eventTimeStr = event.getProperty("DtStart").getValue();
-
-                        if (eventTimeStr.length() > 8) {
-                            eventTime = LocalDateTime.parse(eventTimeStr.substring(0,15), fullformatter);
-                            if ((eventTime.getHour() + eventTime.getMinute()) != 0) {
-                                String formattedTime = eventTime.format(timeFormatter);
+                        Parameter eventTZ = event.getProperty("DtStart").getParameter("TZID");
+                        if (eventTZ!=null) {
+                            TimeZone calendarTZ = registry.getTimeZone(eventTZ.toString().split("=")[1]);
+                            int calendarToUTC = calendarTZ.getOffset(Instant.now().toEpochMilli());
+                            java.util.TimeZone systemTZ = java.util.TimeZone.getDefault();
+                            int UTCToSystem = systemTZ.getOffset(Instant.now().toEpochMilli());
+                            LocalDateTime eventDateTime = LocalDateTime.parse(eventTimeStr.substring(0,15), fullformatter);
+                            eventDateTime = eventDateTime.minusSeconds((long) (calendarToUTC/1000.));
+                            eventDateTime = eventDateTime.plusSeconds((long) (UTCToSystem/1000.));
+                            if ((eventDateTime.getHour() + eventDateTime.getMinute()) != 0) {
+                                String formattedTime = eventDateTime.format(timeFormatter);
                                 summary = formattedTime + " " + summary;
                             }
 
@@ -228,7 +251,7 @@ public class iCalParser {
             }
             loadCalendars();
         };
-            new Thread(thread).start();
+        new Thread(thread).start();
 
 
 
