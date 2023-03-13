@@ -19,6 +19,6 @@ A calendar and daily notes app for Onyx Boox devices. Only currently tested on M
 </div>
 
 
-Alpha release apk available [here](https://github.com/ctorney/Daily-Diary/releases/tag/v0.1.0-alpha)
+Alpha release apk available [here](https://github.com/ctorney/Daily-Diary/releases/tag/v0.1.1-alpha)
 
 
