@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'com.onyx.dailydiary'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.onyx.dailydiary"
         minSdk 28
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
@@ -55,13 +55,13 @@ dependencies {
 
     implementation 'org.mnode.ical4j:ical4j:3.0.2'
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.8.0'
+    implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.preference:preference:1.2.0'
-    implementation('com.onyx.android.sdk:onyxsdk-device:1.2.20') {
+    implementation 'androidx.preference:preference:1.2.1'
+    implementation('com.onyx.android.sdk:onyxsdk-device:1.2.26') {
         exclude group: 'com.android.support', module: 'support-compat'
     }
-    implementation('com.onyx.android.sdk:onyxsdk-pen:1.4.2'){
+    implementation('com.onyx.android.sdk:onyxsdk-pen:1.4.8'){
         exclude group: 'com.android.support', module: 'support-compat'
     }
 //
@@ -75,4 +75,12 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
+
+
+
+
+
+configurations.implementation {
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
 }
