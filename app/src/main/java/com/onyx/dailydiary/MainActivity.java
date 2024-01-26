@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -21,7 +22,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 // import android.widget.Toolbar;
-
+import org.lsposed.hiddenapibypass.HiddenApiBypass;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -72,6 +73,11 @@ public class MainActivity extends AppCompatActivity implements CalendarAdapter.O
         selectedDate = LocalDate.now();
         initWidgets();
         initReceiver();
+
+        // fix for latest tablets (from https://github.com/gaborauth/toolsboox-android/issues/305)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            HiddenApiBypass.addHiddenApiExemptions("");
+        }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d");
         DayofMonth = selectedDate.format(formatter);
