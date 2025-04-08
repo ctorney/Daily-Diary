@@ -1,3 +1,7 @@
+## This project has now been archived. 
+
+Overall the onyx sdk is a bit too buggy and poorly documented to work with so I gave up trying to maintain this app.
+
 # Daily Diary
 
 A calendar and daily notes app for Onyx Boox devices. Only currently tested on Max Lumi.
